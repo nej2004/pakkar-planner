@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pakkar Factory Planner</title>
+<meta name="theme-color" content="#0F1E3D">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230F1E3D'/%3E%3Crect x='7' y='9' width='12' height='4' rx='1' fill='%23F25C2A'/%3E%3Crect x='11' y='15' width='14' height='4' rx='1' fill='%231E7F6E'/%3E%3Crect x='7' y='21' width='9' height='4' rx='1' fill='%239DB0CC'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -175,6 +177,62 @@ td input.edited{border-color:var(--blue);background:var(--blue-bg)}
 .toast.on{opacity:1}
 @media(max-width:600px){.wrap{padding:0 16px}.g-lab{width:150px;flex-basis:150px}.g-lab .mt{display:none}select.big,.pickrow select{min-width:0;width:100%}}
 @media print{nav.tabs,.ctls,.pickrow button{display:none!important}section.view{display:block!important}.gantt{max-height:none;overflow:visible}}
+
+/* ---------- UI polish ---------- */
+:root{color-scheme:light}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){color-scheme:dark} }
+:root[data-theme="dark"]{color-scheme:dark}
+body{-webkit-font-smoothing:antialiased}
+.ctl input,.ctl select{color-scheme:dark;background:#1A2B50;border:1px solid #2C3F69;color:#fff;border-radius:6px;padding:6px 8px;font:inherit;font-size:13px;height:34px}
+.ctl input:focus,.ctl select:focus{outline:2px solid var(--orange);outline-offset:1px}
+.hbtns{display:flex;flex-wrap:wrap;gap:8px}
+.hbtn{height:34px;transition:background .15s,border-color .15s}
+.hbtn:hover{border-color:#5A73A8}
+nav.tabs button{transition:color .15s}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button.on{border-bottom-color:var(--orange)}
+.stat,.kpi[data-f],.btn,.g-row{transition:background .15s,border-color .15s}
+:is(button,select,input,.kpi[data-f]):focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.card{box-shadow:0 1px 2px rgba(15,30,61,.05)}
+.panel{min-width:0}
+/* weekly bar charts: scroll sideways instead of squashing labels */
+.vb{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+.vb .c{min-width:38px}
+
+@media(max-width:700px){
+  h1{font-size:21px}
+  header.top .wrap{padding-top:14px;padding-bottom:14px;gap:12px}
+  .ctls{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+  .ctl input,.ctl select{width:100%}
+  .ctl input[type=number]{width:100%}
+  .ctl label{min-height:2.5em;display:flex;align-items:flex-end;line-height:1.25}
+  .hbtns{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}
+  nav.tabs button{flex:1;padding:12px 8px;font-size:15px}
+  main{padding-top:12px}
+  .card{padding:14px 12px;border-radius:10px}
+  .card h2{font-size:17px}
+  .panel{padding:12px}
+  .kpis{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi{padding:10px 12px}
+  .kpi .n{font-size:22px}
+  /* stage + material bars: label and value on one line, bar underneath */
+  .hb{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"nm v" "tr tr";gap:3px 10px;margin:10px 0}
+  .hb .nm{grid-area:nm} .hb .v{grid-area:v} .hb .tr{grid-area:tr;height:10px}
+  /* action list: one compact card per row */
+  table.act thead{display:none}
+  table.act,table.act tbody{display:block}
+  table.act tr{display:grid;grid-template-columns:34px minmax(0,1fr) auto;grid-template-areas:"chk sty st" "chk stp stp" "chk dt dt";gap:2px 10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+  table.act td{border:0;padding:0}
+  table.act td:nth-child(1){grid-area:chk;align-self:center}
+  table.act td:nth-child(2){grid-area:sty;font-size:14px}
+  table.act td:nth-child(3){grid-area:stp;color:var(--muted);font-size:13.5px}
+  table.act td:nth-child(4){grid-area:dt;margin-top:4px}
+  table.act td:nth-child(5){grid-area:st;align-self:start}
+  table.act td[colspan]{grid-area:1/1/2/-1}
+  .pickrow label{width:100%}
+  .dh{font-size:15px;padding:10px 12px}
+  .dcol{padding:10px 12px}
+}
 </style>
 </head>
 <body>
@@ -184,11 +242,13 @@ td input.edited{border-color:var(--blue);background:var(--blue-bg)}
     <div class="ctl"><label for="asof">Today</label><input type="date" id="asof"></div>
     <div class="ctl"><label for="fl">On floor · days before production</label><input type="number" id="fl" min="0" value="7"></div>
     <div class="ctl"><label for="bl">Buy · days before floor</label><input type="number" id="bl" min="0" value="7"></div>
-    <div class="ctl"><label for="sun">If a date is a Sunday</label><select id="sun" style="background:#1A2B50;border:1px solid #2C3F69;color:#fff;border-radius:6px;padding:6px 8px;font:inherit;font-size:13px"><option value="sat">Move to Saturday before</option><option value="mon">Move to Monday after</option><option value="keep">Keep Sunday</option></select></div>
+    <div class="ctl"><label for="sun">If a date is a Sunday</label><select id="sun"><option value="sat">Move to Saturday before</option><option value="mon">Move to Monday after</option><option value="keep">Keep Sunday</option></select></div>
+    <div class="hbtns">
     <button class="hbtn" id="xlsBtn">Download Excel</button>
     <button class="hbtn" id="saveBtn">Save backup</button>
     <button class="hbtn" id="openBtn">Open backup</button>
     <button class="hbtn" id="loadBtn">Load new sheets</button>
+    </div>
     <input type="file" id="fBackup" accept=".json" hidden><input type="file" id="fSheets" accept=".xlsx,.xls" multiple hidden>
   </div>
 </div></header>
@@ -211,7 +271,7 @@ td input.edited{border-color:var(--blue);background:var(--blue-bg)}
       <div class="panel"><h3>Pairs starting production (leather cutting) per week</h3><div id="pLoad"></div></div>
     </div>
     <div class="panel"><h3>Action list — late steps and steps due in the next 14 days</h3>
-      <div class="tbl" style="background:var(--card)"><table><thead><tr><th>Done</th><th>Style</th><th>Step</th><th>Date (change if it moves)</th><th>Status</th></tr></thead><tbody id="pAct"></tbody></table></div></div>
+      <div class="tbl" style="background:var(--card)"><table class="act"><thead><tr><th>Done</th><th>Style</th><th>Step</th><th>Date (change if it moves)</th><th>Status</th></tr></thead><tbody id="pAct"></tbody></table></div></div>
   </div>
   <div class="card">
     <h2>Production timeline — all styles</h2>
