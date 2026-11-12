@@ -195,6 +195,38 @@ nav.tabs button.on{border-bottom-color:var(--orange)}
 :is(button,select,input,.kpi[data-f]):focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .card{box-shadow:0 1px 2px rgba(15,30,61,.05)}
 .panel{min-width:0}
+/* what to do */
+.td-bar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--soft);padding:4px;border-radius:10px}
+.seg button{font:600 14px Inter,sans-serif;border:0;background:none;color:var(--muted);padding:8px 12px;border-radius:7px;cursor:pointer;display:flex;gap:7px;align-items:center;white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.seg button .c{font:500 12px "IBM Plex Mono",monospace;background:var(--grey-bg);color:var(--muted);border-radius:999px;padding:1px 7px;min-width:22px;text-align:center}
+.seg button.on .c{background:var(--blue-bg);color:var(--blue)}
+.seg button.late .c{background:var(--red-bg);color:var(--red)}
+.seg-sm button{font-size:12.5px;padding:6px 10px}
+.td-day{font:700 13px Inter,sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
+.td-day:first-child{margin-top:0}
+.td-day.now{color:var(--orange)}
+.td-row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:8px;margin-bottom:6px;background:var(--card)}
+.td-row.t-prod{border-left-color:var(--ph4)} .td-row.t-buy{border-left-color:var(--ph2)} .td-row.t-del{border-left-color:var(--ph3)}
+.td-row.late{background:var(--red-bg)}
+.td-row input{width:20px;height:20px;accent-color:var(--emerald);cursor:pointer;margin:0}
+.td-what{font-weight:600;font-size:14.5px;line-height:1.3}
+.td-what .pill{margin-right:6px;vertical-align:1px}
+.td-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.td-sub b{color:var(--ink)}
+.td-when{text-align:right;font:500 13px "IBM Plex Mono",monospace;white-space:nowrap}
+.td-when small{display:block;font:600 11.5px Inter,sans-serif;color:var(--muted);margin-top:2px}
+.td-row.late .td-when small{color:var(--red)}
+.td-empty{color:var(--muted);padding:18px 4px}
+.td-more{margin-top:6px}
+@media(max-width:700px){
+  .seg{width:100%} .seg button{flex:1 1 auto;justify-content:center;padding:8px 8px}
+  .td-row{grid-template-columns:22px minmax(0,1fr);grid-template-areas:"c w" "c m" "c t"}
+  .td-row>input{grid-area:c;align-self:start;margin-top:2px} .td-main{grid-area:w} .td-when{grid-area:t;text-align:left}
+  .td-when small{display:inline;margin-left:6px}
+}
 /* weekly bar charts: scroll sideways instead of squashing labels */
 .vb{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
 .vb .c{min-width:38px}
@@ -262,6 +294,15 @@ nav.tabs button.on{border-bottom-color:var(--orange)}
 
 <!-- PRODUCTION -->
 <section class="view on" id="v-prod">
+  <div class="card" id="todoCard">
+    <h2>What to do</h2>
+    <p class="hint">Production steps, materials to buy and deliveries to the factory floor — all styles together. Tick an item when it's done.</p>
+    <div class="td-bar">
+      <div class="seg" id="tdPer" role="tablist" aria-label="Period"></div>
+      <div class="seg seg-sm" id="tdType" aria-label="Type"></div>
+    </div>
+    <div id="tdList"></div>
+  </div>
   <div class="card">
     <h2>Production dashboard</h2>
     <p class="hint">Updates live from the plan and your ticks. Change any date in the action list, in a style's checklist, or by dragging its bar on the timeline.</p>
@@ -609,7 +650,77 @@ function renderProdDetail(){
       <td><input type="date" data-k="${k}" value="${iso(d)}" class="${msEdited(o,k)?'edited':''}">${msEdited(o,k)?` <button class="linkish" data-reset="${k}">reset</button>`:''}</td><td>${pill}</td></tr>`;
   }).join('');
 }
-function renderProd(){ renderProdStats(); renderProdGantt(); renderProdDetail(); }
+function renderProd(){ renderTodo(); renderProdStats(); renderProdGantt(); renderProdDetail(); }
+
+/* ---------- WHAT TO DO ---------- */
+const TD={p:'today',t:'all',all:false};
+const TD_PER=[['over','Overdue'],['today','Today'],['tom','Tomorrow'],['week','This week'],['month','This month']];
+const TD_TYPE=[['all','All'],['prod','Production'],['buy','Buy'],['del','Deliver']];
+function todoTasks(){
+  const t=[];
+  DATA.orders.forEach(o=>{
+    MS.forEach(([k,l])=>{ if(msDone(o,k)) return; const d=msDate(o,k); if(d) t.push({type:'prod',o,k,l,d}); });
+    const p=prodDate(o); if(p&&p<=TODAY) return;
+    getItems(o).forEach(it=>{ const d=itemDates(o,it);
+      if(!it.bought&&!it.onfloor&&d.buy) t.push({type:'buy',o,it,d:d.buy});
+      if(!it.onfloor&&d.floor) t.push({type:'del',o,it,d:d.floor}); });
+  });
+  const ord={buy:0,del:1,prod:2};
+  return t.sort((a,b)=>a.d-b.d||ord[a.type]-ord[b.type]||a.o.name.localeCompare(b.o.name));
+}
+function inPeriod(x,p){
+  const n=diff(x.d,TODAY);
+  const weekEnd=addD(TODAY,(7-TODAY.getDay())%7), monthEnd=new Date(TODAY.getFullYear(),TODAY.getMonth()+1,0);
+  if(p==='over') return n<0;
+  if(p==='today') return n===0;
+  if(p==='tom') return n===1;
+  if(p==='week') return n>=0&&x.d<=weekEnd;
+  return n>=0&&x.d<=monthEnd;
+}
+function todoRow(x){
+  const late=x.d<TODAY, o=x.o;
+  const box=x.type==='prod'
+    ? `<input type="checkbox" data-no="${o.no}" data-k="${x.k}" aria-label="Done: ${esc(x.l)}">`
+    : `<input type="checkbox" data-no="${o.no}" data-id="${esc(x.it.id)}" data-f="${x.type==='buy'?'bought':'onfloor'}" aria-label="${x.type==='buy'?'Bought':'On floor'}">`;
+  const what=x.type==='prod'
+    ? `<span class="pill p-blue">Production</span>${esc(x.l)}`
+    : x.type==='buy'
+      ? `<span class="pill p-amber">Buy</span>${esc(x.it.mat)} <span style="font-weight:400;color:var(--muted)">— ${esc(x.it.spec)}</span>`
+      : `<span class="pill p-green">Deliver</span>${esc(x.it.mat)} to the factory floor${x.it.bought?' <span class="pill p-grey">bought</span>':''}`;
+  const qty=x.type==='prod'?o.qty:x.it.qty, unit=x.type==='prod'?'pairs':x.it.unit;
+  const sub=`<b>${esc(o.name)}</b> · ${esc(o.color)} · ${num(qty)} ${esc(unit)}${x.type!=='prod'?' · cutting '+fmt(prodDate(o)):''}`;
+  return `<div class="td-row t-${x.type}${late?' late':''}">${box}<div class="td-main"><div class="td-what">${what}</div><div class="td-sub">${sub}</div></div><div class="td-when">${fmtW(x.d)}<small>${rel(x.d)}</small></div></div>`;
+}
+function renderTodo(){
+  const all=todoTasks(), byType=x=>TD.t==='all'||x.type===TD.t;
+  document.getElementById('tdPer').innerHTML=TD_PER.map(([k,l])=>{ const n=all.filter(x=>byType(x)&&inPeriod(x,k)).length;
+    return `<button role="tab" data-p="${k}" class="${TD.p===k?'on':''}${k==='over'&&n?' late':''}" aria-selected="${TD.p===k}">${l}<span class="c">${n}</span></button>`; }).join('');
+  document.getElementById('tdType').innerHTML=TD_TYPE.map(([k,l])=>{ const n=all.filter(x=>(k==='all'||x.type===k)&&inPeriod(x,TD.p)).length;
+    return `<button data-t="${k}" class="${TD.t===k?'on':''}">${l}<span class="c">${n}</span></button>`; }).join('');
+  const rows=all.filter(x=>byType(x)&&inPeriod(x,TD.p));
+  const empty={over:'Nothing overdue.',today:'Nothing due today.',tom:'Nothing due tomorrow.',week:'Nothing else due this week.',month:'Nothing else due this month.'}[TD.p];
+  if(!rows.length){
+    const over=all.filter(x=>byType(x)&&x.d<TODAY).length;
+    const after=TD.p==='today'?0:TD.p==='tom'?1:null;   // only Today/Tomorrow point ahead
+    const nxt=after===null?null:all.find(x=>byType(x)&&diff(x.d,TODAY)>after);
+    let jump='';
+    if(over&&TD.p!=='over') jump+=`<button class="btn small" data-p="over">See ${over} overdue</button> `;
+    if(nxt){ const p=inPeriod(nxt,'week')?'week':'month'; const n=all.filter(x=>byType(x)&&inPeriod(x,p)).length;
+      jump+=`<button class="btn small" data-p="${p}">Next due ${fmtW(nxt.d)} · see ${p==='week'?'this week':'this month'} (${n})</button>`; }
+    document.getElementById('tdList').innerHTML=`<div class="td-empty">${empty}${jump?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px">${jump}</div>`:''}</div>`; return; }
+  const LIMIT=40, shown=TD.all?rows:rows.slice(0,LIMIT);
+  const grouped=TD.p!=='today'&&TD.p!=='tom';
+  let h='', last='';
+  shown.forEach(x=>{ const k=iso(x.d);
+    if(grouped&&k!==last){ const n=diff(x.d,TODAY); h+=`<div class="td-day${n===0?' now':''}">${fmtW(x.d)}${n===0?' · Today':n===1?' · Tomorrow':''}</div>`; last=k; }
+    h+=todoRow(x); });
+  if(rows.length>shown.length) h+=`<button class="btn small td-more" id="tdMore">Show all ${rows.length}</button>`;
+  document.getElementById('tdList').innerHTML=h;
+}
+document.getElementById('tdPer').addEventListener('click',e=>{ const b=e.target.closest('[data-p]'); if(!b) return; TD.p=b.dataset.p; TD.all=false; renderTodo(); });
+document.getElementById('tdType').addEventListener('click',e=>{ const b=e.target.closest('[data-t]'); if(!b) return; TD.t=b.dataset.t; TD.all=false; renderTodo(); });
+document.getElementById('tdList').addEventListener('click',e=>{ if(e.target.id==='tdMore'){ TD.all=true; renderTodo(); return; }
+  const b=e.target.closest('[data-p]'); if(b){ TD.p=b.dataset.p; TD.all=false; renderTodo(); } });
 
 /* ---------- PROCUREMENT ---------- */
 function renderProcStats(){
@@ -770,10 +881,12 @@ function itemChange(e){
   else if(f==='qty') it.qty=+t.value||0;
   else if(f==='buy'||f==='floor'){ if(!t.value) return; it[f]=t.value; }
   else it[f]=t.value;
-  saveST(); renderProc(); renderProdGantt(); renderProdDetail(); renderProdStats(); toast('Saved');
+  saveST(); renderProc(); renderProdGantt(); renderProdDetail(); renderProdStats(); renderTodo(); toast('Saved');
 }
 document.getElementById('bBody').addEventListener('change',itemChange);
 document.getElementById('dayPlan').addEventListener('change',itemChange);
+document.getElementById('tdList').addEventListener('change',msChange);
+document.getElementById('tdList').addEventListener('change',itemChange);
 ['dRange','dWhat'].forEach(id=>document.getElementById(id).addEventListener('change',renderDayPlan));
 document.getElementById('dPrint').onclick=()=>{ document.body.classList.add('printday'); window.print(); setTimeout(()=>document.body.classList.remove('printday'),500); };
 document.getElementById('bBody').addEventListener('click',e=>{ const t=e.target; if(!t.dataset||!t.dataset.del) return; const o=DATA.orders.find(x=>x.no===t.dataset.no);
