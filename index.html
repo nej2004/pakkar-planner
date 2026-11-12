@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pakkar Factory Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Serif:wght@600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#0F1E3D; --orange:#F25C2A; --emerald:#1E7F6E;
+  --bg:#F3F5F8; --card:#FFFFFF; --ink:#13203B; --muted:#5B6476; --line:#E1E5EC; --soft:#F0F3F7; --rowalt:#FAFBFC;
+  --red:#C2362B; --red-bg:#FBE9E7; --amber:#9A6200; --amber-bg:#FFF2D6; --green:#1E7F6E; --green-bg:#E1F2EE; --blue:#2F5DA8; --blue-bg:#E6EDF9; --grey-bg:#ECEFF3;
+  --ph1:#9DB0CC; --ph2:#E3A93B; --ph3:#1E7F6E; --ph4:#2F5DA8; --ph5:#B9C3D3;
+  --pr1:#C2362B; --pr2:#E3A93B; --pr3:#2F5DA8; --pr4:#1E7F6E;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0B1220; --card:#121B2E; --ink:#E8ECF3; --muted:#9AA5B8; --line:#24304A; --soft:#18233A; --rowalt:#141F34;
+  --red:#FF7A6E; --red-bg:#3A1A1A; --amber:#F2B84B; --amber-bg:#3A2D12; --green:#4CC3A9; --green-bg:#12332D; --blue:#86AEF5; --blue-bg:#18284A; --grey-bg:#1C2639;
+  --ph1:#5C6F8E; --ph2:#C98F25; --ph3:#2FA38B; --ph4:#4E7CC8; --ph5:#3A4760;
+  --pr1:#E0574C; --pr2:#D19A30; --pr3:#4E7CC8; --pr4:#2FA38B; } }
+:root[data-theme="dark"]{
+  --bg:#0B1220; --card:#121B2E; --ink:#E8ECF3; --muted:#9AA5B8; --line:#24304A; --soft:#18233A; --rowalt:#141F34;
+  --red:#FF7A6E; --red-bg:#3A1A1A; --amber:#F2B84B; --amber-bg:#3A2D12; --green:#4CC3A9; --green-bg:#12332D; --blue:#86AEF5; --blue-bg:#18284A; --grey-bg:#1C2639;
+  --ph1:#5C6F8E; --ph2:#C98F25; --ph3:#2FA38B; --ph4:#4E7CC8; --ph5:#3A4760;
+  --pr1:#E0574C; --pr2:#D19A30; --pr3:#4E7CC8; --pr4:#2FA38B; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,sans-serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.wrap{max-width:1400px;margin:0 auto;padding:0 20px}
+header.top{background:var(--navy);color:#fff;position:relative;overflow:hidden}
+header.top::before{content:"";position:absolute;inset:0;opacity:.08;background:repeating-linear-gradient(-35deg,#fff 0 1px,transparent 1px 22px)}
+header.top .wrap{position:relative;padding-top:18px;padding-bottom:16px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between}
+h1{font:600 24px/1.15 "IBM Plex Serif",serif;margin:0 0 4px}
+.sub{color:#C9D2E3;font-size:13px}
+.ctls{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.ctl label{display:block;font-size:11px;color:#C9D2E3;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.ctl input{background:#1A2B50;border:1px solid #2C3F69;color:#fff;border-radius:6px;padding:6px 8px;font:inherit;font-size:13px}
+.ctl input[type=number]{width:58px}
+.hbtn{background:transparent;border:1px solid #3B5080;color:#fff;border-radius:6px;padding:7px 10px;font:inherit;font-size:13px;cursor:pointer}
+.hbtn:hover{background:#1A2B50}
+nav.tabs{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+nav.tabs .wrap{display:flex;gap:4px}
+nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:14px 18px;font:600 16px Inter,sans-serif;color:var(--muted);cursor:pointer}
+nav.tabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
+main{padding:18px 0 60px}
+section.view{display:none} section.view.on{display:block}
+.strip{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:center;cursor:pointer}
+.stat .n{font:500 24px/1 "IBM Plex Mono",monospace}
+.stat .l{font-size:13px;color:var(--muted);max-width:180px;line-height:1.25}
+.stat.red .n{color:var(--red)} .stat.amber .n{color:var(--amber)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px;min-width:0}
+.card h2{font:600 18px/1.25 "IBM Plex Serif",serif;margin:0 0 4px}
+.hint{font-size:13px;color:var(--muted);margin:0 0 12px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin:0 0 10px}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.legend i.today{width:2px;height:12px;background:var(--orange)}
+.legend i.ldia{width:9px;height:9px;transform:rotate(45deg);border-radius:1px}
+/* gantt */
+.gantt{overflow:auto;border:1px solid var(--line);border-radius:8px;max-height:72vh;position:relative}
+.g-row{display:flex;min-width:max-content;border-bottom:1px solid var(--line);cursor:pointer}
+.g-row:nth-child(even) .g-track,.g-row:nth-child(even) .g-lab{background:var(--rowalt)}
+.g-row:hover .g-track,.g-row:hover .g-lab{background:var(--soft)}
+.g-row.sel .g-lab{box-shadow:inset 4px 0 0 var(--ink)}
+.g-row.sel .g-track,.g-row.sel .g-lab{background:var(--blue-bg)}
+.g-lab{position:sticky;left:0;z-index:3;width:230px;flex:0 0 230px;background:var(--card);padding:6px 10px;border-right:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.g-lab .nm{font-weight:600;font-size:13.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-lab .mt{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px}
+.dot.red{background:var(--red)} .dot.amber{background:var(--amber)} .dot.green{background:var(--green)} .dot.grey{background:var(--muted)}
+.g-track{position:relative;height:44px;background:var(--card)}
+.g-head{position:sticky;top:0;z-index:5;cursor:default}
+.g-head .g-lab,.g-head .g-track{background:var(--soft)!important;height:40px}
+.g-head .g-lab{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;z-index:6}
+.mlab{position:absolute;top:3px;font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap}
+.wlab{position:absolute;bottom:3px;font:10.5px "IBM Plex Mono",monospace;color:var(--muted)}
+.wl{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+.ml{position:absolute;top:0;bottom:0;width:1px;background:var(--muted);opacity:.35}
+.tl{position:absolute;top:0;bottom:0;width:2px;background:var(--orange);z-index:2}
+.tlab{position:absolute;bottom:2px;transform:translateX(-50%);background:var(--orange);color:#fff;font:600 10px Inter;padding:1px 5px;border-radius:3px;z-index:3}
+.bar{position:absolute;top:13px;height:18px;border-radius:3px;font-size:10.5px;font-weight:600;color:#fff;padding:0 4px;line-height:18px;overflow:hidden;white-space:nowrap}
+.bar.lt{color:var(--ink)}
+.dia{position:absolute;top:16px;width:12px;height:12px;transform:translateX(-6px) rotate(45deg);border-radius:2px;z-index:2;border:2px solid var(--card)}
+.flagm{position:absolute;top:9px;width:3px;height:26px;background:var(--ink);transform:translateX(-1px);z-index:2}
+.done-ov{position:absolute;top:13px;height:18px;background:repeating-linear-gradient(45deg,rgba(255,255,255,.35) 0 3px,transparent 3px 7px);border-radius:3px 0 0 3px;pointer-events:none}
+/* detail */
+.pickrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.pickrow label{font-weight:600;font-size:14px}
+select.big,.pickrow select{font:600 15px Inter,sans-serif;padding:9px 12px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);min-width:280px;max-width:100%}
+.detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:16px}
+@media(max-width:900px){.detail{grid-template-columns:minmax(0,1fr)}}
+.next{border-radius:12px;padding:16px;border:2px solid var(--line);margin-bottom:12px}
+.next.red{border-color:var(--red);background:var(--red-bg)} .next.amber{border-color:var(--amber);background:var(--amber-bg)} .next.green{border-color:var(--green);background:var(--green-bg)}
+.next .k{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.next .big{font:700 22px/1.2 Inter,sans-serif;margin:4px 0}
+.next .when{font:500 15px "IBM Plex Mono",monospace}
+.after{font-size:14px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.08)}
+.box{background:var(--soft);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+.box .k{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-bottom:4px}
+.box ul{margin:4px 0 0;padding-left:18px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;background:var(--soft);white-space:nowrap}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+tr.donerow td{color:var(--muted)}
+tr.donerow td.stp{text-decoration:line-through}
+tr.nextrow td{background:var(--amber-bg)}
+tr.grp td{background:var(--soft);font-weight:700;font-size:13.5px}
+td input[type=checkbox]{width:22px;height:22px;accent-color:var(--emerald);cursor:pointer}
+td input[type=date],td input[type=text],td input[type=number]{font:inherit;font-size:14px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);max-width:100%}
+td input[type=number]{width:90px}
+td input.edited{border-color:var(--blue);background:var(--blue-bg)}
+.pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.p-red{background:var(--red-bg);color:var(--red)} .p-amber{background:var(--amber-bg);color:var(--amber)} .p-green{background:var(--green-bg);color:var(--green)} .p-blue{background:var(--blue-bg);color:var(--blue)} .p-grey{background:var(--grey-bg);color:var(--muted)}
+.btn{font:600 14px Inter,sans-serif;padding:8px 14px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--soft)}
+.btn.small{font-size:12.5px;padding:4px 9px}
+.btn.x{border:0;background:none;color:var(--muted);font-size:18px;padding:2px 6px}
+.btn.x:hover{color:var(--red)}
+.linkish{background:none;border:0;color:var(--blue);cursor:pointer;font:inherit;font-size:12px;padding:0;text-decoration:underline}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+.day{border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden}
+.day.over{border-color:var(--red)} .day.today{border-color:var(--ink);border-width:2px}
+.dh{background:var(--soft);padding:10px 14px;font:700 16px Inter,sans-serif;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.day.over .dh{background:var(--red-bg);color:var(--red)}
+.dh .cnt{font-weight:500;font-size:13px;color:var(--muted)}
+.dcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.dcol{padding:12px 14px} .dcol+.dcol{border-left:1px solid var(--line)}
+.dcol h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.dcol.solo{grid-column:1/-1}
+@media(max-width:800px){.dcols{grid-template-columns:minmax(0,1fr)}.dcol+.dcol{border-left:0;border-top:1px solid var(--line)}}
+.mg{margin-bottom:12px} .mg:last-child{margin-bottom:0}
+.mh{font-weight:600;font-size:14.5px} .mh .tot{font:500 13px "IBM Plex Mono",monospace;color:var(--muted)}
+.ln{display:flex;gap:10px;align-items:center;padding:5px 0 5px 2px;font-size:14px}
+.ln input[type=checkbox]{width:20px;height:20px;accent-color:var(--emerald);flex:0 0 20px;cursor:pointer}
+.ln input[type=date]{width:auto;height:auto;flex:0 0 auto}
+.ln .q{font:13px "IBM Plex Mono",monospace;color:var(--muted);margin-left:auto;white-space:nowrap;text-align:right}
+.ln.done{color:var(--muted);text-decoration:line-through}
+@media print{body.printday #v-prod,body.printday #v-proc>:not(#dayCard),body.printday header,body.printday .pickrow{display:none!important}body.printday #v-proc{display:block!important}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0 4px}
+.kpi{background:var(--soft);border-radius:10px;padding:12px 14px;border:1px solid transparent}
+.kpi[data-f]{cursor:pointer} .kpi[data-f]:hover{border-color:var(--line)}
+.kpi .n{font:500 26px/1 "IBM Plex Mono",monospace;margin-bottom:5px}
+.kpi .l{font-size:12.5px;color:var(--muted);line-height:1.3}
+.kpi.red .n{color:var(--red)} .kpi.amber .n{color:var(--amber)} .kpi.green .n{color:var(--green)}
+.kpi .pb{height:6px;background:var(--line);border-radius:3px;margin-top:8px;overflow:hidden} .kpi .pb i{display:block;height:100%;background:var(--green)}
+.dash2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media(max-width:900px){.dash2{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--soft);border-radius:10px;padding:12px 14px;margin-top:12px;min-width:0}
+.panel h3{margin:0 0 10px;font:600 14px Inter,sans-serif}
+.hb{display:grid;grid-template-columns:minmax(90px,150px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;margin:6px 0}
+.hb .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .tr{background:var(--card);height:16px;border-radius:3px;overflow:hidden;display:flex}
+.hb .tr i{display:block;height:100%}
+.hb .v{font:12.5px "IBM Plex Mono",monospace;color:var(--muted);white-space:nowrap;text-align:right}
+.vb{display:flex;align-items:stretch;gap:4px;height:170px;padding-top:4px}
+.vb .c{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px}
+.vb .stk{width:100%;max-width:40px;display:flex;flex-direction:column-reverse;border-radius:3px 3px 0 0;overflow:hidden}
+.vb .val{font:11px "IBM Plex Mono",monospace;color:var(--ink);white-space:nowrap}
+.vb .lb{font:10.5px "IBM Plex Mono",monospace;color:var(--muted);white-space:nowrap;margin-top:3px}
+.vb .c.now .lb{color:var(--orange);font-weight:600}
+.minileg{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.minileg i{display:inline-block;width:11px;height:9px;border-radius:2px;margin-right:4px}
+.bars{position:absolute;top:0;bottom:0;left:0;right:0}
+#gProd .bar,#gProc .dia{cursor:grab;touch-action:none}
+.dragging,.dragging *{cursor:grabbing!important}
+.dragtip{position:fixed;z-index:60;background:var(--navy);color:#fff;font:600 12px Inter;padding:4px 8px;border-radius:5px;pointer-events:none;display:none}
+.ln{display:flex;gap:10px;align-items:center;padding:5px 0 5px 2px;font-size:14px;flex-wrap:wrap}
+.ln label{display:flex;gap:10px;align-items:center;cursor:pointer;flex:1;min-width:180px}
+.ln input[type=date]{font:13px Inter;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.ln input[type=date].edited{border-color:var(--blue);background:var(--blue-bg)}
+.ln.done label span:first-of-type{color:var(--muted);text-decoration:line-through}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 16px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:50}
+.toast.on{opacity:1}
+@media(max-width:600px){.wrap{padding:0 16px}.g-lab{width:150px;flex-basis:150px}.g-lab .mt{display:none}select.big,.pickrow select{min-width:0;width:100%}}
+@media print{nav.tabs,.ctls,.pickrow button{display:none!important}section.view{display:block!important}.gantt{max-height:none;overflow:visible}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div><h1>Pakkar Factory Planner</h1><div class="sub" id="subline"></div></div>
+  <div class="ctls">
+    <div class="ctl"><label for="asof">Today</label><input type="date" id="asof"></div>
+    <div class="ctl"><label for="fl">On floor · days before production</label><input type="number" id="fl" min="0" value="7"></div>
+    <div class="ctl"><label for="bl">Buy · days before floor</label><input type="number" id="bl" min="0" value="7"></div>
+    <div class="ctl"><label for="sun">If a date is a Sunday</label><select id="sun" style="background:#1A2B50;border:1px solid #2C3F69;color:#fff;border-radius:6px;padding:6px 8px;font:inherit;font-size:13px"><option value="sat">Move to Saturday before</option><option value="mon">Move to Monday after</option><option value="keep">Keep Sunday</option></select></div>
+    <button class="hbtn" id="xlsBtn">Download Excel</button>
+    <button class="hbtn" id="saveBtn">Save backup</button>
+    <button class="hbtn" id="openBtn">Open backup</button>
+    <button class="hbtn" id="loadBtn">Load new sheets</button>
+    <input type="file" id="fBackup" accept=".json" hidden><input type="file" id="fSheets" accept=".xlsx,.xls" multiple hidden>
+  </div>
+</div></header>
+
+<nav class="tabs"><div class="wrap">
+  <button data-v="prod" class="on">Production</button>
+  <button data-v="proc">Procurement</button>
+</div></nav>
+
+<main><div class="wrap">
+
+<!-- PRODUCTION -->
+<section class="view on" id="v-prod">
+  <div class="card">
+    <h2>Production dashboard</h2>
+    <p class="hint">Updates live from the plan and your ticks. Change any date in the action list, in a style's checklist, or by dragging its bar on the timeline.</p>
+    <div class="kpis" id="pStats"></div>
+    <div class="dash2">
+      <div class="panel"><h3>Where every style is now</h3><div id="pStage"></div></div>
+      <div class="panel"><h3>Pairs starting production (leather cutting) per week</h3><div id="pLoad"></div></div>
+    </div>
+    <div class="panel"><h3>Action list — late steps and steps due in the next 14 days</h3>
+      <div class="tbl" style="background:var(--card)"><table><thead><tr><th>Done</th><th>Style</th><th>Step</th><th>Date (change if it moves)</th><th>Status</th></tr></thead><tbody id="pAct"></tbody></table></div></div>
+  </div>
+  <div class="card">
+    <h2>Production timeline — all styles</h2>
+    <p class="hint">Click a style to open its checklist below. <b>Drag a bar left or right</b> to move that style's whole schedule — materials dates follow.</p>
+    <div class="legend">
+      <span><i style="background:var(--ph1)"></i>Sampling (fit → PP)</span><span><i style="background:var(--ph2)"></i>Pilot</span>
+      <span><i style="background:var(--ph3)"></i>Cutting &amp; closing</span><span><i style="background:var(--ph4)"></i>Lasting &amp; inspection</span>
+      <span><i style="background:var(--ph5)"></i>Dispatch (ex-factory → CC)</span><span><i class="today"></i>Today</span>
+      <span><span class="dot red" style="display:inline-block"></span> late / blocked</span><span><span class="dot amber" style="display:inline-block"></span> due within 7 days</span><span><span class="dot green" style="display:inline-block"></span> on track</span>
+    </div>
+    <div class="gantt" id="gProd"></div>
+  </div>
+  <div class="card" id="prodDetailCard">
+    <div class="pickrow"><label for="pSel">Style</label><select id="pSel"></select>
+      <button class="btn small" id="pPrev">‹ Prev</button><button class="btn small" id="pNext">Next ›</button></div>
+    <div class="detail">
+      <div id="pLeft"></div>
+      <div>
+        <div class="tbl"><table><thead><tr><th>Done</th><th>Step</th><th>Planned date</th><th>Status</th></tr></thead><tbody id="pSteps"></tbody></table></div>
+        <p class="note">Tick a step when it is finished. Change a date if the plan moves — the change is saved and shown in blue. Past steps are ticked automatically from the plan until you change them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCUREMENT -->
+<section class="view" id="v-proc">
+  <div class="card">
+    <h2>Procurement dashboard</h2>
+    <p class="hint">Counts cover styles not yet in production. Click a tile to open that list below. Change dates in the day-by-day list, a style's material table, or by dragging a ◆ on the timeline.</p>
+    <div class="kpis" id="bStats"></div>
+    <div class="dash2">
+      <div class="panel"><h3>Material lines to buy per week</h3><div id="bWeeks"></div></div>
+      <div class="panel"><h3>Still to buy — totals by material</h3><div id="bMat"></div></div>
+    </div>
+  </div>
+  <div class="card" id="dayCard">
+    <h2>Day by day — what to buy and what to deliver to the floor</h2>
+    <p class="hint">All styles together. The same material for different styles is grouped, with the total. Tick when bought or when it reaches the factory floor.</p>
+    <div class="pickrow"><label for="dRange">Show</label>
+      <select id="dRange"><option value="7">Overdue + next 7 days</option><option value="14" selected>Overdue + next 14 days</option><option value="28">Overdue + next 4 weeks</option><option value="9999">Everything still open</option></select>
+      <select id="dWhat"><option value="both">Buy + deliver</option><option value="buy">Buy only</option><option value="del">Deliver only</option></select>
+      <button class="btn small" id="dPrint">Print this list</button></div>
+    <div id="dayPlan"></div>
+  </div>
+  <div class="card">
+    <h2>Procurement timeline — when to buy for each style</h2>
+    <p class="hint"><b>Drag a ◆</b> to move that buy date. Buy on the ◆ date. Materials must be on the factory floor by the start of the green bar. The black line is production start (leather cutting).</p>
+    <div class="legend">
+      <span><i class="ldia" style="background:var(--pr1)"></i>Buy date — late</span><span><i class="ldia" style="background:var(--pr2)"></i>Buy date — this week</span>
+      <span><i class="ldia" style="background:var(--pr3)"></i>Buy date — later</span><span><i style="background:var(--pr3);opacity:.45"></i>Delivery to factory</span>
+      <span><i style="background:var(--pr4)"></i>On floor, ready for production</span><span><i style="background:var(--ink);width:3px"></i>Production start</span><span><i class="today"></i>Today</span>
+    </div>
+    <div class="gantt" id="gProc"></div>
+  </div>
+  <div class="card">
+    <div class="pickrow">
+      <label for="bSel">Show</label><select id="bSel"></select>
+      <select id="bFilter"><option value="soon">Late + next 14 days</option><option value="open">Everything not yet bought</option><option value="floor">Bought, not yet on floor</option><option value="all">Everything</option></select>
+    </div>
+    <div id="bBody"></div>
+  </div>
+</section>
+
+</div></main>
+<div class="toast" id="toast"></div><div class="dragtip" id="dragtip"></div>
+
+<script>
+const EMBED = {"production_plan.xlsx::PAKKAR (2)": [["Style Name", "Style no.", "PO NO.", "Quantity (units)", "COLOR", "PO DATE", "ORG. PO ON PORTAL", "Packaging ORDERED ", "FIT SAMPLE SUBMISSION", "FIT APPROVAL", "TOOLING", "PP SAMPLE SUBMISSION", null, null, "PILOT PRODUCTION", "Leather cut date", "CLOSING DATE", "Lasting start date", "Final inspection date", "Ex Factory", "EX-INDIA DATE", "CC", "Actual Ship date comments e.g Vessel details, ETA"], [null, null, null, null, null, null, null, null, null, null, null, null, "Leather", "Component/ Soles", null, null, null, null, null, null, null, null, null], ["KICKSOSY", 37470048, 25471, 2096, "BLANC", "2026-07-23", "2026-07-30", "2026-08-06", "2026-09-27", "2026-10-04", "2026-10-18", "2026-10-18", "2026-10-25", "2026-11-01", "2026-10-25", "2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-24", "2026-12-06", "2026-12-13", null], ["SUSHY", 37470047, 25471, 4412, "GOLD", "2026-07-23", "2026-07-30", "2026-08-06", "2026-10-04", "2026-10-11", "2026-10-25", "2026-10-25", "2026-11-01", "2026-11-08", "2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29", "2026-12-01", "2026-12-13", "2026-12-20", null], ["SUSHY", 37350030, 25471, 4426, "NAVY", "2026-07-23", "2026-07-30", "2026-08-06", "2026-10-11", "2026-10-18", "2026-11-01", "2026-11-01", "2026-11-08", "2026-11-15", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29", "2026-12-06", "2026-12-08", "2026-12-20", "2026-12-27", null], ["SUSHY", 37470046, 25471, 4688, "PINK MULTI", "2026-07-23", "2026-07-30", "2026-08-06", "2026-10-18", "2026-10-25", "2026-11-08", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-15", "2026-11-22", "2026-11-29", "2026-12-06", "2026-12-13", "2026-12-15", "2026-12-27", "2027-01-03", null], ["KICKSONAO", 37450040, 25471, 4854, "BLANC", "2026-07-23", "2026-07-30", "2026-08-06", "2026-10-18", "2026-10-25", "2026-11-08", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-15", "2026-11-22", "2026-11-29", "2026-12-06", "2026-12-13", "2026-12-15", "2026-12-27", "2027-01-03", null], ["KICKSONAO", 37330041, 25471, 4754, "BLUE/NAVY", "2026-07-23", "2026-07-30", "2026-08-06", "2026-10-25", "2026-11-01", "2026-11-15", "2026-11-15", "2026-11-22", "2026-11-29", "2026-11-22", "2026-11-29", "2026-12-06", "2026-12-13", "2026-12-20", "2026-12-22", "2027-01-03", "2027-01-10", null], ["NONOSTI", 37350027, null, 3050, "CAMEL", null, null, null, "2026-10-25", "2026-11-01", "2026-11-15", "2026-11-15", "2026-11-22", "2026-11-29", "2026-11-22", "2026-11-29", "2026-12-06", "2026-12-13", "2026-12-20", "2026-12-22", "2027-01-03", "2027-01-10", null], ["KICKSOSY", 37350031, 25471, 2056, "BLANC/MULTICO", "2026-07-23", "2026-07-30", "2026-08-06", "2026-11-01", "2026-11-08", "2026-11-22", "2026-11-22", "2026-11-29", "2026-12-06", "2026-11-29", "2026-12-06", "2026-12-13", "2026-12-20", "2026-12-27", "2026-12-29", "2027-01-10", "2027-01-17", null], ["KICKSOLY", 37450039, 25471, 4746, "GOLD", "2026-07-23", "2026-07-30", "2026-08-06", "2026-11-08", "2026-11-15", "2026-11-29", "2026-11-29", "2026-12-06", "2026-12-13", "2026-12-06", "2026-12-13", "2026-12-20", "2026-12-27", "2027-01-03", "2027-01-05", "2027-01-17", "2027-01-24", null], ["KICKSOLY", 37330040, 25471, 4034, "NAVY", "2026-07-23", "2026-07-30", "2026-08-06", "2026-11-08", "2026-11-15", "2026-11-29", "2026-11-29", "2026-12-06", "2026-12-13", "2026-12-06", "2026-12-13", "2026-12-20", "2026-12-27", "2027-01-03", "2027-01-05", "2027-01-17", "2027-01-24", null], ["NONOPI", 37350026, null, 4686, "BLUE", null, null, null, "2026-11-15", "2026-11-22", "2026-12-06", "2026-12-06", "2026-12-13", "2026-12-20", "2026-12-13", "2026-12-20", "2026-12-27", "2027-01-03", "2027-01-10", "2027-01-12", "2027-01-24", "2027-01-31", null], ["NONOPI", 37470043, null, 3046, "NAVY/PINK", null, null, null, "2026-11-22", "2026-11-29", "2026-12-13", "2026-12-13", "2026-12-20", "2026-12-27", "2026-12-20", "2026-12-27", "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-19", "2027-01-31", "2027-02-07", null], ["NONOPI", 37470042, null, 4682, "PINK", null, null, null, "2026-11-22", "2026-11-29", "2026-12-13", "2026-12-13", "2026-12-20", "2026-12-27", "2026-12-20", "2026-12-27", "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-19", "2027-01-31", "2027-02-07", null], ["KICKSUMBACK", 37350017, null, 3048, "CAMEL", null, null, null, "2026-11-29", "2026-12-06", "2026-12-20", "2026-12-20", "2026-12-27", "2027-01-03", "2026-12-27", "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-24", "2027-01-26", "2027-02-07", "2027-02-14", null], ["KICKSUMBACK", 37470032, null, 4688, "GOLD", null, null, null, "2026-11-29", "2026-12-06", "2026-12-20", "2026-12-20", "2026-12-27", "2027-01-03", "2026-12-27", "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-24", "2027-01-26", "2027-02-07", "2027-02-14", null], ["KICKSUMBACK", 37350016, null, 4680, "BEIGE", null, null, null, "2026-12-06", "2026-12-13", "2026-12-27", "2026-12-27", "2027-01-03", "2027-01-10", "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-24", "2027-01-31", "2027-02-02", "2027-02-14", "2027-02-21", null], ["KICKSUMBACK", 37470033, null, 3112, "BLANC/MULTICO", null, null, null, "2026-12-06", "2026-12-13", "2026-12-27", "2026-12-27", "2027-01-03", "2027-01-10", "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-24", "2027-01-31", "2027-02-02", "2027-02-14", "2027-02-21", null], ["BIBOO", 37470038, null, 5300, "GOLD", null, null, null, "2026-12-13", "2026-12-20", "2027-01-03", "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-10", "2027-01-17", "2027-01-24", "2027-01-31", "2027-02-07", "2027-02-09", "2027-02-21", "2027-02-28", null], ["BOPING", 37470039, null, 4682, "BLANC/MULTICO", null, null, null, "2026-12-13", "2026-12-20", "2027-01-03", "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-10", "2027-01-17", "2027-01-24", "2027-01-31", "2027-02-07", "2027-02-09", "2027-02-21", "2027-02-28", null], ["BIPOD", 37350023, null, 4678, "NAVY", null, null, null, "2026-12-27", "2027-01-03", "2027-01-17", "2027-01-17", "2027-01-24", "2027-01-31", "2027-01-24", "2027-01-31", "2027-02-07", "2027-02-14", "2027-02-21", "2027-02-23", "2027-03-07", "2027-03-14", null], ["BOPING", 37350022, null, 4682, "NAVY/ORANGE", null, null, null, "2026-12-27", "2027-01-03", "2027-01-17", "2027-01-17", "2027-01-24", "2027-01-31", "2027-01-24", "2027-01-31", "2027-02-07", "2027-02-14", "2027-02-21", "2027-02-23", "2027-03-07", "2027-03-14", null], ["NONO", 37470044, null, 4400, "PINK", null, null, null, "2027-01-03", "2027-01-10", "2027-01-24", "2027-01-24", "2027-01-31", "2027-02-07", "2027-01-31", "2027-02-07", "2027-02-14", "2027-02-21", "2027-02-28", "2027-03-02", "2027-03-14", "2027-03-21", null], ["NONO", 37470045, null, 1962, "GREY", null, null, null, "2027-01-03", "2027-01-10", "2027-01-24", "2027-01-24", "2027-01-31", "2027-02-07", "2027-01-31", "2027-02-07", "2027-02-14", "2027-02-21", "2027-02-28", "2027-03-02", "2027-03-14", "2027-03-21", null], ["NONO", 37350028, null, 4552, "BEIGE", null, null, null, "2027-01-10", "2027-01-17", "2027-01-31", "2027-01-31", "2027-02-07", "2027-02-14", "2027-02-07", "2027-02-14", "2027-02-21", "2027-02-28", "2027-03-07", "2027-03-09", "2027-03-21", "2027-03-28", null], ["NONO", 37350029, null, 1960, "KHAKI", null, null, null, "2027-01-10", "2027-01-17", "2027-01-31", "2027-01-31", "2027-02-07", "2027-02-14", "2027-02-07", "2027-02-14", "2027-02-21", "2027-02-28", "2027-03-07", "2027-03-09", "2027-03-21", "2027-03-28", null], [null, null, null, 99274, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null, null, "2026-11-12", null, null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, "Cutting-End", "Upper-End", "Bottom-End", "Asking Rate", null, null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, "Planned to compplete", "2026-02-14", "2026-02-21", "2026-02-28", null, null, null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null], [null, null, null, null, null, null, null, "Order qty", 99274, 99274, 99274, 99274, null, null, null, null, null, null, null, null, null, null, null]], "production_plan.xlsx::PAKKAR (3)": [["Style Name", "Quantity (units)", "COLOR", "PO DATE", "CFM ETD", "REMARKS"], [null, null, null, null, null, null], ["SUSHY", 4412, "GOLD", "2026-07-23", "2026-08-28", "LEATHER EXPECTED 27/8 "], ["SUSHY", 4688, "PINK MULTI", "2026-07-23", "2026-09-04", "LEATHER EXPECTED 31/8, TO BE SENT FOR SCREEN PRINT"], ["SUSHY", 4426, "NAVY", "2026-07-23", "2026-09-04", "LEATHER EXPECTED 31/8, "], ["KICKSONAO", 4854, "BLANC", "2026-07-23", "2026-08-28", "SCREEN PRINT EXPECTED 27/8"], ["KICKSONAO", 4754, "BLUE/NAVY", "2026-07-23", "2026-09-04", "LEATHER EXPECTED 2/9"], ["KICKSOSY", 2096, "BLANC", "2026-07-23", "2026-08-28", "SCREEN PRINT EXPECTED 27/8"], ["KICKSOSY", 2056, "BLANC/MULTICO", "2026-07-23", "2026-09-04", "LEATHER EXPECTED 31/8, TO BE SENT FOR SCREEN PRINT"], ["KICKSOLY", 4746, "GOLD", "2026-07-23", "2026-09-01", "LEATHER AVBL/ PATTERN CORRECTION"], ["KICKSOLY", 4034, "NAVY", "2026-07-23", "2026-09-04", "LEATHER EXPECTED 31/8, "], ["NONOSTI", 3050, "CAMEL", "2026-07-23", "2026-08-28", "LEATHER AVBL"], ["NONOPI", 4686, "BLUE", "2026-07-23", "2026-09-04", "LEATHER EXPECTED 31/8, "], ["NONOPI", 3046, "NAVY/PINK", "2026-07-23", "2026-09-04", null], ["NONOPI", 4682, "PINK", "2026-07-23", "2026-09-11", null], ["KICKSUMBACK", 3048, "CAMEL", "2026-07-23", "2026-09-11", null], ["KICKSUMBACK", 4688, "GOLD", "2026-07-23", "2026-09-04", null], ["KICKSUMBACK", 4680, "BEIGE", "2026-07-23", "2026-09-11", null], ["KICKSUMBACK", 3112, "BLANC/MULTICO", "2026-07-23", "2026-09-04", null], ["BIBOO", 5300, "GOLD", "2026-07-23", null, "SOLE NEW MOULD DATE NOT CONFIRMED"], ["BOPING", 4682, "BLANC/MULTICO", "2026-07-23", null, "SOLE NEW MOULD DATE NOT CONFIRMED"], ["BIPOD", 4678, "NAVY", "2026-07-23", null, "SOLE NEW MOULD DATE NOT CONFIRMED"], ["BOPING", 4682, "NAVY/ORANGE", "2026-07-23", null, "SOLE NEW MOULD DATE NOT CONFIRMED"], ["NONO", 4400, "PINK", "2026-07-23", null, null], ["NONO", 1962, "GREY", "2026-07-23", null, null], ["NONO", 4552, "BEIGE", "2026-07-23", null, null], ["NONO", 1960, "KHAKI", "2026-07-23", null, null]], "production_plan.xlsx::LEATHER": [["Style Name", "Style no.", "PO NO.", "Quantity (units)", "COLOR", "UPPER LEATHER AS PER ROYER PRODUCTION", "UPPER LEATHER TO BE USED", "REMARKS", "REMARKS 2", null], [null, null, null, null, null, null, null, null, null, null], ["SUSHY", 37470047, 25471, 4412, "GOLD", "COW METALLIC", "GOAT METALLIC", "WE WILL MATCH THE COLOUR AND FINSIH EXACTLY SAME ", null, null], ["SUSHY", 37470046, 25471, 4688, "PINK MULTI", "COW NUBUCK", "GOAT NUBUCK", "WE WILL MATCH THE COLOUR EXACTLY TO ORIGINAL", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["SUSHY", 37350030, 25471, 4426, "NAVY", "GOAT NUBUCK", "GOAT NUBUCK", "WE WILL MATCH THE COLOUR TO THE ORIGINAL", null, null], ["KICKSONAO", 37450040, 25471, 4854, "BLANC", "COW NAPPA", "GOAT NAPPA", "WE WILL BE USING GOOD QUALITY GOAT NAPPA, THERE WILL BE NO CHANGE IN COLOUR AND OVERALL LOOK OF THE SHOE. ", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["KICKSONAO", 37330041, 25471, 4754, "BLUE/NAVY", "COW NUBUCK", "GOAT NUBUCK", "WE WILL MATCH THE COLOUR AS PER ORIGINAL AND THERE WILL BE NO CHANGE IN OVERALL LOOK OF THE SHOE", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["KICKSOSY", 37470048, 25471, 2096, "BLANC", "COW NAPPA", "GOAT NAPPA", "WE WILL BE USING GOOD QUALITY GOAT NAPPA, THERE WILL BE NO CHANGE IN COLOUR AND OVERALL LOOK OF THE SHOE. ", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["KICKSOSY", 37350031, 25471, 2056, "BLANC/MULTICO", "GOAT NAPPA", "GOAT NAPPA", "WE WILL MATCH THE COLOUR CLOSER TO THE ORIGINAL", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["KICKSOLY", 37450039, 25471, 4746, "GOLD", "COW METALLIC + SHEEP NAPPA", "GOAT METALLIC + SHEEP NAPPA", "WE WILL MATCH THE COLOUR AND FINSIH EXACTLY SAME ", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["KICKSOLY", 37330040, 25471, 4034, "NAVY", "COW NUBUCK + SHEEP NAPPA", "GOAT NUBUCK + GOAT NAPPA", "WE WILL MATCH THE COLOUR SAME AS ORIGINAL", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["NONOSTI", 37350027, 25395, 3050, "CAMEL", "GOAT NAPPA", "GOAT NAPPA", null, null, null], ["NONOPI", 37350026, 25395, 4686, "BLUE", "GOAT NUBUCK", "GOAT NUBUCK", "NO CHANGE", null, null], ["NONOPI", 37470043, 25395, 3046, "NAVY/PINK", "NEW STYLE", "GOAT NUBUCK + SHEEP LINING", "NEW DEVELOPMENT FROM CHAUSSEA", null, null], ["NONOPI", 37470042, 25395, 4682, "PINK", "NEW STYLE", "GOAT NUBUCK + SHEEP LINING", "NEW DEVELOPMENT FROM CHAUSSEA", null, null], ["KICKSUMBACK", 37350017, 25395, 3048, "CAMEL", "COW NUBUCK", "GOAT NUBUCK", "WE WILL MATCH THE COLOUR AND LOOK OF THE SHOE", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["KICKSUMBACK", 37470032, 25395, 4688, "GOLD", "COW METALLIC", "GOAT METALLIC", "WE WILL MATCH THE COLOUR AND FINSIH EXACTLY SAME ", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["KICKSUMBACK", 37350016, 25395, 4680, "BEIGE", "COW NUBUCK", "GOAT NUBUCK", "WE WILL MATCH THE COLOUR AND LOOK OF THE SHOE", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["KICKSUMBACK", 37470033, 25395, 3112, "BLANC/MULTICO", "COW NAPPA", "GOAT NAPPA", "WE WILL BE USING GOOD QUALITY GOAT NAPPA, THERE WILL BE NO CHANGE IN COLOUR AND OVERALL LOOK OF THE SHOE. ", "NOTE: WE HAVE ONLY MADE SMS SAMPLE IN THIS STYLE", null], ["BIBOO", 37470038, 25395, 5300, "GOLD", "GOAT METALLIC", "GOAT METALLIC", "NO CHANGE", "NOTE: WE HAVE ONLY MADE  SAMPLE IN THIS STYLE", null], ["BOPING", 37470039, 25395, 4682, "BLANC/MULTICO", "NEW STYLE", "GOAT NAPPA", null, null, null], ["BIPOD", 37350023, 25395, 4678, "NAVY", "NEW STYLE", "GOAT NUBUCK", null, null, null], ["BOPING", 37350022, 25395, 4682, "NAVY/ORANGE", "NEW STYLE", "GOAT NUBUCK", null, null, null], ["NONO", 37470044, 25395, 4400, "PINK", "NEW STYLE", "GOAT NUBUCK", "NEW DEVELOPMENT FROM CHAUSSEA", null, null], ["NONO", 37470045, 25395, 1962, "GREY", "NEW STYLE", "GOAT NUBUCK", "NEW DEVELOPMENT FROM CHAUSSEA", null, null], ["NONO", 37350028, 25395, 4552, "BEIGE", "NEW STYLE", "GOAT NUBUCK", "NEW DEVELOPMENT FROM CHAUSSEA", null, null], ["NONO", 37350029, 25395, 1960, "KHAKI", "NEW STYLE", "GOAT NUBUCK", "NEW DEVELOPMENT FROM CHAUSSEA", null, null]], "production_plan.xlsx::Sheet1": [], "approved_design.xlsx::Sheet1": [["Sl.No", "LINE", "Style", "Color", "Sample Size", "Image", "CFM status"], [1, "SOFTERS", "37330040                         KICK SOLY", "Blue Navy", 22, null, "WAITING FOR CFM COMMENTS"], [2, "SOFTERS", "37450039                              KICK SOLY", "Gold", 22, null, "APPROVED"], [3, "SOFTERS", "37330041                              KICK SONAO", "Blue Navy", 22, null, "APPROVED"], [4, "SOFTERS", "37450040                                  KICK SONAO", "Blanc", 22, null, "WAITING FOR CFM COMMENTS"], [5, "SOFTERS", "37350031                                    KICK SOSY", "Blanc", 22, null, "LEATHER PENDING"], [6, "SOFTERS", "37470048                                 KICK SOSY", "Blanc", 22, null, "APPROVED"], [7, "SOFTERS", "37470046                             SUSHY", "Pink", 22, null, "APPROVED              "], [8, "SOFTERS", "37470047                               SUSHY", "SPPL Gold", 22, null, "APPROVED              "], [9, "SOFTERS", "37350030                          SUSHY", "Blue Tricolor", 22, null, "APPROVED              "], [10, "NONORALLY SANDALS", "37350026                    NONOPI", "Blue  ", 22, null, "APPROVED              "], [11, "NONORALLY SANDALS", "37350027                      NONOSTI", "Camel", 22, null, "APPROVED"], [12, "NONORALLY SANDALS", "37470043                      NONOPI", "NAVY", 22, null, "UPPER IN PROCESS"], [13, "NONORALLY SANDALS", "37470042                      NONOPI", "PINK", 22, null, "LEATHER PENDING"], [14, "NONORALLY SANDALS", "37470045                          NONO (BEAR)                     ", "GREY", 22, null, "LEATHER PENDING / VELCRO PENDING & LEATHER PATCH PENDING"], [15, "NONORALLY SANDALS", "37350028                          NONO (DOG)", "BEIGE", 22, null, " LEATHER PATCH PENDING "], [16, "NONORALLY SANDALS", "37350029                         NONO (FROG)", "GREEN", 22, null, "UPPER IN PROCESS VELCRO PENDING"], [17, "NONORALLY SANDALS", "37470044                           NONO (CAT)", "PINK", 22, null, "UPPER IN PROCESS LEATHER PATCH PENDING "], [18, "SUMMER", "37350016                               KICK SUMBACK", "Beige", 22, null, "WAITING FOR CFM COMMENTS"], [19, "SUMMER", "37350017                              KICK SUMBACK", "Camel", 22, null, "CUTTING IN PROCESS"], [20, "SUMMER", "37470032                             KICK SUMBACK", "Gold", 22, null, "WAITING FOR CFM COMMENTS"], [21, "SUMMER", "37470033                               KICK SUMBACK", "Blanc", 22, null, "WAITING FOR CFM COMMENTS"], [22, "BIBOO", "37350023                           BIPOD", "Navy Tricolor", 22, null, " CFM DIES RECEIVED SOLE PENDING+LEATHER PENDING"], [23, "BIBOO", "37470038                           BIBOO GOLD                     (KICK WVIT)", "Gold", 22, null, "CFM DIES RECEIVED LEATHER IN DOUBT COW OR GOAT+SOLE PENDINGL "], [24, "BIBOO", "37350022                        BOPING", "Navy   ", 22, null, "LEATHER+SOLE PENDING"], [25, "BIBOO", "37470039                       BOPING", "Blanc", 22, null, "LEATHER+SOLE PENDING"]]};
+const DAY = 86400000;
+const MS = [
+  ['fit','Fit sample sent'],['fitA','Fit approval (CFM)'],['tool','Tooling ready'],['pp','PP sample sent'],['pilot','Pilot production'],
+  ['cut','Leather cutting — production start'],['closing','Closing (upper stitching)'],['lasting','Lasting'],['final','Final inspection'],
+  ['exf','Ex-factory'],['exi','Ex-India'],['cc','CC']
+];
+const SHORT={fit:'Fit sample',fitA:'Fit approval',tool:'Tooling',pp:'PP sample',pilot:'Pilot',cut:'Cutting',closing:'Closing',lasting:'Lasting',final:'Final insp.',exf:'Ex-factory',exi:'Ex-India',cc:'CC'};
+let RAW = {sheets: EMBED, source: 'production_plan.xlsx + approved_design.xlsx'};
+let DATA = null, ST = null, TODAY = null;
+
+/* ---------- helpers ---------- */
+const S = v => (v===null||v===undefined) ? '' : String(v).replace(/\s+/g,' ').trim();
+const U = v => S(v).toUpperCase();
+function toDate(v){
+  if(v===null||v===undefined||v==='') return null;
+  if(v instanceof Date) return new Date(v.getFullYear(),v.getMonth(),v.getDate());
+  if(typeof v==='number' && v>20000 && v<80000){ const d=new Date(Date.UTC(1899,11,30)+v*DAY); return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()); }
+  const m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  return null;
+}
+const addD=(d,n)=>d?new Date(d.getFullYear(),d.getMonth(),d.getDate()+n):null;
+const diff=(a,b)=>Math.round((a-b)/DAY);
+const fmt=d=>d?d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}):'—';
+const fmtW=d=>d?d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'}):'—';
+const fmtY=d=>d?d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';
+const iso=d=>d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`:'';
+const esc=s=>S(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=n=>Number(n||0).toLocaleString('en-GB');
+function rel(d){ if(!d) return ''; const n=diff(d,TODAY); if(n===0) return 'today'; if(n===1) return 'tomorrow'; if(n>0) return 'in '+n+' days'; return Math.abs(n)+' days late'; }
+function toast(t){ const e=document.getElementById('toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>e.classList.remove('on'),1600); }
+
+/* ---------- saved edits ---------- */
+const KEY='pakkar-planner-v2';
+function loadST(){ let s=null; try{ s=JSON.parse(localStorage.getItem(KEY)); }catch(e){} return s&&typeof s==='object'?s:{ms:{},items:{},cfg:{fl:7,bl:7}}; }
+function saveST(){ try{ localStorage.setItem(KEY,JSON.stringify(ST)); }catch(e){} }
+
+/* ---------- parse sheets ---------- */
+function findHeader(rows, key){ for(let i=0;i<Math.min(rows.length,15);i++){ const r=rows[i]||[]; if(r.some(c=>U(c).includes(key))) return i; } return -1; }
+function col(hdr, ...keys){ for(const k of keys){ const i=hdr.findIndex(c=>U(c).includes(k)); if(i>=0) return i; } return -1; }
+function parse(sheets){
+  let plan=null, leather=null, remarks=null, design=null;
+  for(const [name,rows] of Object.entries(sheets)){
+    if(!rows||!rows.length) continue; let h;
+    if((h=findHeader(rows,'LEATHER CUT'))>=0) plan={rows,h,name};
+    else if((h=findHeader(rows,'UPPER LEATHER TO BE USED'))>=0) leather={rows,h,name};
+    else if((h=findHeader(rows,'CFM ETD'))>=0) remarks={rows,h,name};
+    else if((h=findHeader(rows,'CFM STATUS'))>=0) design={rows,h,name};
+  }
+  const out={orders:[]}; if(!plan) return out;
+  const H=plan.rows[plan.h].map(U);
+  const c={ name:col(H,'STYLE NAME'), no:col(H,'STYLE NO'), po:col(H,'PO NO'), qty:col(H,'QUANTITY'), color:col(H,'COLOR','COLOUR'),
+    pack:col(H,'PACKAGING'), fit:col(H,'FIT SAMPLE'), fitA:col(H,'FIT APPROVAL'), tool:col(H,'TOOLING'),
+    pp:col(H,'PP SAMPLE'), pilot:col(H,'PILOT'), cut:col(H,'LEATHER CUT'), closing:col(H,'CLOSING'), lasting:col(H,'LASTING'),
+    final:col(H,'FINAL INSPECTION'), exf:col(H,'EX FACTORY','EX-FACTORY'), exi:col(H,'EX-INDIA','EX INDIA'), cc:H.findIndex(x=>x==='CC') };
+  const lmap={};
+  if(leather){ const L=leather.rows[leather.h].map(U);
+    const ln=col(L,'STYLE NO'), lu=col(L,'TO BE USED'), lrem=L.findIndex(x=>x==='REMARKS'), lrem2=col(L,'REMARKS 2'), lpo=col(L,'PO NO');
+    for(const r of leather.rows.slice(leather.h+1)){ const k=S(r[ln]).replace(/\D/g,''); if(k) lmap[k]={po:lpo>=0?S(r[lpo]):'',use:U(r[lu]),rem:S(r[lrem]),rem2:S(r[lrem2])}; } }
+  const rlist=[];
+  if(remarks){ const R=remarks.rows[remarks.h].map(U);
+    const rn=col(R,'STYLE NAME'), rq=col(R,'QUANTITY'), rc=col(R,'COLOR'), rr=col(R,'REMARKS');
+    for(const r of remarks.rows.slice(remarks.h+1)){ if(S(r[rn])) rlist.push({name:U(r[rn]).replace(/\s/g,''),qty:+r[rq]||0,color:U(r[rc]),rem:U(r[rr])}); } }
+  const dmap={};
+  if(design){ const D=design.rows[design.h].map(U);
+    const ds=col(D,'STYLE'), dc=col(D,'COLOR','COLOUR'), dst=col(D,'CFM STATUS'), dl=col(D,'LINE');
+    for(const r of design.rows.slice(design.h+1)){ const m=S(r[ds]).match(/(\d{6,})\s*(.*)/); if(!m) continue;
+      dmap[m[1]]={color:U(r[dc]),status:U(r[dst]),line:S(r[dl])}; } }
+  for(const r of plan.rows.slice(plan.h+1)){
+    const no=S(r[c.no]).replace(/\D/g,''); if(!no||!S(r[c.name])) continue;
+    const name=U(r[c.name]), color=U(r[c.color]), qty=+r[c.qty]||0;
+    const ms={}; for(const [k] of MS) ms[k]=c[k]>=0?toDate(r[c[k]]):null;
+    const nk=name.replace(/\s/g,'');
+    const rm=rlist.find(x=>x.name===nk&&x.qty===qty&&x.color===color) || rlist.find(x=>x.name===nk&&x.color===color);
+    const lt=lmap[no]||null;
+    out.orders.push({ no, name, color, qty, po:S(r[c.po])||(lt&&lt.po)||'', packOrdered:toDate(r[c.pack]),
+      ms, leather:lt, remark:rm?rm.rem:'', design:dmap[no]||null, line:(dmap[no]&&dmap[no].line)||'' });
+  }
+  return out;
+}
+
+/* ---------- model ---------- */
+const cfg=()=>({fl:Math.max(0,+document.getElementById('fl').value||0), bl:Math.max(0,+document.getElementById('bl').value||0), sun:document.getElementById('sun').value});
+function sunAdj(d){ if(!d||d.getDay()!==0) return d; const s=cfg().sun; return s==='sat'?addD(d,-1):s==='mon'?addD(d,1):d; }
+const isApproved=o=>!!(o.design&&/^APPROVED/.test(o.design.status));
+function msDate(o,k){ const e=ST.ms[o.no]&&ST.ms[o.no][k]; return e&&e.d?toDate(e.d):o.ms[k]; }
+function msEdited(o,k){ const e=ST.ms[o.no]&&ST.ms[o.no][k]; return !!(e&&e.d); }
+function msDone(o,k){
+  const e=ST.ms[o.no]&&ST.ms[o.no][k]; if(e&&typeof e.done==='boolean') return e.done;
+  if(k==='fitA') return isApproved(o);
+  const d=msDate(o,k); return !!(d&&d<TODAY);
+}
+function setMS(o,k,patch){ ST.ms[o.no]=ST.ms[o.no]||{}; ST.ms[o.no][k]={...(ST.ms[o.no][k]||{}),...patch}; saveST(); }
+const prodDate=o=>msDate(o,'cut');
+
+function defaultItems(o){
+  const items=[], st=o.design?o.design.status:'', rem=o.remark;
+  const lth=o.leather?o.leather.use:'';
+  if(lth) lth.split('+').map(x=>x.trim()).filter(Boolean).forEach(p=>items.push({mat:p.includes('LINING')?'Lining':'Upper leather',spec:p}));
+  else items.push({mat:'Upper leather',spec:'Type not given in sheet'});
+  items.push({mat:'Soles & components',spec:rem.includes('MOULD')?'New sole mould — date not confirmed':'Soles, insoles, components'});
+  if(st.includes('VELCRO')) items.push({mat:'Velcro',spec:'Marked pending on approved-design sheet'});
+  if(st.includes('PATCH')) items.push({mat:'Leather patch',spec:'Marked pending on approved-design sheet'});
+  if(rem.includes('SCREEN PRINT')) items.push({mat:'Screen print',spec:'Send uppers for printing'});
+  items.push({mat:'Packaging',spec:o.packOrdered?'Ordered '+fmtY(o.packOrdered)+' per plan':'Boxes, tissue, labels',bought:!!o.packOrdered});
+  return items.map((it,i)=>({id:o.no+'-'+i,qty:o.qty,unit:'pairs',bought:false,onfloor:false,buy:'',floor:'',...it}));
+}
+let CACHE={};
+function getItems(o){ return ST.items[o.no] || (CACHE[o.no]=CACHE[o.no]||defaultItems(o)); }
+function editItems(o){ if(!ST.items[o.no]) ST.items[o.no]=getItems(o); return ST.items[o.no]; }
+function itemDates(o,it){ const {fl,bl}=cfg(); const p=prodDate(o);
+  const fRaw=it.floor?toDate(it.floor):addD(p,-fl); const floor=it.floor?fRaw:sunAdj(fRaw); const buy=it.buy?toDate(it.buy):sunAdj(addD(fRaw,-bl)); return {buy,floor,prod:p}; }
+function itemStatus(o,it){
+  const {buy,floor,prod}=itemDates(o,it);
+  if(it.onfloor) return {t:'On floor',c:'p-green',r:9};
+  if(prod&&prod<=TODAY) return {t:'Production started — confirm on floor',c:'p-grey',r:8};
+  if(it.bought&&floor<TODAY) return {t:'Bought — late to floor',c:'p-red',r:1};
+  if(it.bought&&diff(floor,TODAY)<=7) return {t:'Bought — bring to floor by '+fmt(floor),c:'p-amber',r:4};
+  if(it.bought) return {t:'Bought',c:'p-blue',r:7};
+  if(floor<TODAY) return {t:'Not bought — production at risk',c:'p-red',r:0};
+  if(buy<TODAY) return {t:'Buy now — late',c:'p-red',r:2};
+  if(diff(buy,TODAY)<=7) return {t:'Buy this week',c:'p-amber',r:3};
+  return {t:'Planned',c:'p-grey',r:6};
+}
+function nextStep(o){ for(const [k,l] of MS){ if(!msDone(o,k)) return {k,l,d:msDate(o,k)}; } return null; }
+function blockers(o){
+  const b=[], st=o.design?o.design.status:'';
+  if(!isApproved(o)) b.push('Design not approved by CFM yet — status: '+(st?st.toLowerCase():'not on approved-design sheet'));
+  if(st.includes('IN DOUBT')) b.push('Leather type undecided (cow or goat) — confirm before buying');
+  if(o.remark.includes('MOULD')) b.push('New sole mould date not confirmed');
+  return b;
+}
+function health(o){
+  const n=nextStep(o); const b=blockers(o); const p=prodDate(o);
+  const late=n&&n.d&&n.d<TODAY;
+  const matLate=getItems(o).some(it=>itemStatus(o,it).r<=2);
+  if(late||matLate||(b.length&&p&&diff(p,TODAY)<=30)) return 'red';
+  if(n&&n.d&&diff(n.d,TODAY)<=7) return 'amber';
+  if(!n) return 'grey';
+  return 'green';
+}
+
+/* ---------- gantt core ---------- */
+const PX=7;
+function range(){
+  let lo=null,hi=null; const {fl,bl}=cfg();
+  DATA.orders.forEach(o=>{ MS.forEach(([k])=>{ const d=msDate(o,k); if(d){ if(!lo||d<lo) lo=d; if(!hi||d>hi) hi=d; } });
+    getItems(o).forEach(it=>{ const {buy}=itemDates(o,it); if(buy&&buy<lo) lo=buy; }); });
+  if(TODAY<lo) lo=TODAY; if(TODAY>hi) hi=TODAY;
+  lo=addD(lo,-((lo.getDay()+6)%7)-7); hi=addD(hi,14);
+  return {lo,hi,W:diff(hi,lo)*PX};
+}
+const X=(d,R)=>diff(d,R.lo)*PX;
+function headRow(R){
+  let h=''; for(let d=new Date(R.lo);d<=R.hi;d=addD(d,1)){
+    const x=X(d,R);
+    if(d.getDate()===1) h+=`<div class="ml" style="left:${x}px"></div><div class="mlab" style="left:${x+4}px">${d.toLocaleDateString('en-GB',{month:'short',year:'numeric'})}</div>`;
+    if(d.getDay()===1) h+=`<div class="wlab" style="left:${x+2}px">${d.getDate()}</div>`;
+  }
+  if(R.lo.getDate()!==1) h+=`<div class="mlab" style="left:4px">${R.lo.toLocaleDateString('en-GB',{month:'short',year:'numeric'})}</div>`;
+  h+=`<div class="tl" style="left:${X(TODAY,R)}px"></div><div class="tlab" style="left:${X(TODAY,R)}px">Today</div>`;
+  return `<div class="g-row g-head"><div class="g-lab">Style · colour</div><div class="g-track" style="width:${R.W}px">${h}</div></div>`;
+}
+function gridLines(R){ let h=''; for(let d=new Date(R.lo);d<=R.hi;d=addD(d,1)){ if(d.getDay()===1) h+=`<div class="wl" style="left:${X(d,R)}px"></div>`; } return h+`<div class="tl" style="left:${X(TODAY,R)}px"></div>`; }
+function seg(a,b,R,color,label,light){ if(!a||!b||b<a) return ''; const w=Math.max(diff(b,a)*PX,3);
+  return `<div class="bar${light?' lt':''}" style="left:${X(a,R)}px;width:${w}px;background:${color}" title="${esc(label)}: ${fmt(a)} → ${fmt(b)}">${w>60?esc(label):''}</div>`; }
+function sortedOrders(){ return [...DATA.orders].sort((a,b)=>(prodDate(a)||0)-(prodDate(b)||0)); }
+function label(o,extra){ return `<div class="g-lab"><span class="dot ${health(o)}"></span><div style="min-width:0"><div class="nm">${esc(o.name)} · ${esc(o.color)}</div><div class="mt">${num(o.qty)} prs · ${extra}</div></div></div>`; }
+
+/* ---------- PRODUCTION ---------- */
+let selP=null;
+function renderProdGantt(){
+  const R=range(); const gl=gridLines(R);
+  let h=headRow(R);
+  sortedOrders().forEach(o=>{
+    const d=k=>msDate(o,k); const n=nextStep(o);
+    let bars=seg(d('fit'),d('pilot'),R,'var(--ph1)','Sampling',true)+seg(d('pilot'),d('cut'),R,'var(--ph2)','Pilot',true)
+      +seg(d('cut'),d('lasting'),R,'var(--ph3)','Cutting & closing')+seg(d('lasting'),d('exf'),R,'var(--ph4)','Lasting & inspection')
+      +seg(d('exf'),d('cc'),R,'var(--ph5)','Dispatch',true);
+    // hatched overlay up to last completed step
+    let lastDone=null; MS.forEach(([k])=>{ if(msDone(o,k)&&d(k)) lastDone=d(k); });
+    if(lastDone&&d('fit')) bars+=`<div class="done-ov" style="left:${X(d('fit'),R)}px;width:${Math.max(0,diff(lastDone,d('fit'))*PX)}px"></div>`;
+    h+=`<div class="g-row${selP===o.no?' sel':''}" data-no="${o.no}">${label(o,n?'Next: '+SHORT[n.k]:'Complete')}<div class="g-track" style="width:${R.W}px">${gl}<div class="bars" data-no="${o.no}">${bars}</div></div></div>`;
+  });
+  const g=document.getElementById('gProd'); const sx=g.scrollLeft; g.innerHTML=h;
+  if(!renderProdGantt.scrolled){ g.scrollLeft=Math.max(0,X(TODAY,R)-420); renderProdGantt.scrolled=true; } else g.scrollLeft=sx;
+}
+function stageOf(o){ let i=-1; MS.forEach(([k],j)=>{ if(msDone(o,k)) i=j; }); return i; }
+const PHASES=[['Not started',-1,-1,'var(--line)'],['Sampling',0,3,'var(--ph1)'],['Pilot',4,4,'var(--ph2)'],['Cutting & closing',5,6,'var(--ph3)'],['Lasting & inspection',7,8,'var(--ph4)'],['Dispatched',9,11,'var(--ph5)']];
+const mondayOf=d=>addD(d,-((d.getDay()+6)%7));
+function renderProdStats(){
+  const O=DATA.orders;
+  const inProd=O.filter(o=>prodDate(o)&&prodDate(o)<=TODAY&&!msDone(o,'exf'));
+  const late=O.filter(o=>{const n=nextStep(o); return n&&n.d&&n.d<TODAY;});
+  const week=O.filter(o=>{const n=nextStep(o); return n&&n.d&&n.d>=TODAY&&diff(n.d,TODAY)<=7;});
+  const notAp=O.filter(o=>!isApproved(o));
+  const m0=new Date(TODAY.getFullYear(),TODAY.getMonth(),1), m1=new Date(TODAY.getFullYear(),TODAY.getMonth()+1,1);
+  const shipM=O.filter(o=>{const d=msDate(o,'exf'); return d&&d>=m0&&d<m1;});
+  const pairs=a=>num(a.reduce((s,o)=>s+o.qty,0));
+  document.getElementById('pStats').innerHTML=[
+    ['',O.length,`styles · ${pairs(O)} pairs in plan`],
+    [late.length?'red':'',late.length,'styles with a late step'],
+    [week.length?'amber':'',week.length,'styles with a step due in 7 days'],
+    ['',inProd.length,`styles in production · ${pairs(inProd)} pairs`],
+    [notAp.length?'amber':'',notAp.length,'designs not yet CFM-approved'],
+    ['',shipM.length,`styles ex-factory in ${TODAY.toLocaleDateString('en-GB',{month:'long'})} · ${pairs(shipM)} pairs`]
+  ].map(([c,n,l])=>`<div class="kpi ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  // stage chart
+  const max=O.length||1;
+  document.getElementById('pStage').innerHTML=PHASES.map(([nm,a,b,col])=>{
+    const os=O.filter(o=>{const s=stageOf(o); return s>=a&&s<=b;}); const w=os.length/max*100;
+    return `<div class="hb" title="${esc(os.map(o=>o.name+' '+o.color).join(', '))}"><span class="nm">${nm}</span><span class="tr"><i style="width:${w}%;background:${col}"></i></span><span class="v">${os.length} styles · ${pairs(os)}</span></div>`; }).join('')
+    +'<div class="minileg">Stage = last step ticked done. Hover a bar to see which styles.</div>';
+  // weekly load
+  const wk=[]; const start=mondayOf(addD(TODAY,-14));
+  for(let i=0;i<14;i++){ const ws=addD(start,i*7), we=addD(ws,7); const os=O.filter(o=>{const d=prodDate(o); return d&&d>=ws&&d<we;}); wk.push({ws,os,q:os.reduce((s,o)=>s+o.qty,0)}); }
+  const mx=Math.max(1,...wk.map(w=>w.q)); const nowW=iso(mondayOf(TODAY));
+  document.getElementById('pLoad').innerHTML=`<div class="vb">${wk.map(w=>`<div class="c${iso(w.ws)===nowW?' now':''}" title="Week of ${fmt(w.ws)}: ${esc(w.os.map(o=>o.name+' '+o.color).join(', ')||'none')}">
+      <span class="val">${w.q?(w.q/1000).toFixed(1)+'k':''}</span><div class="stk" style="height:${w.q/mx*120}px;background:var(--ph3)"></div><span class="lb">${fmt(w.ws).replace(' ','\u00a0')}</span></div>`).join('')}</div>
+    <div class="minileg">Week starting Monday. Orange label = this week. Hover for styles.</div>`;
+  // action list
+  const rows=[]; O.forEach(o=>MS.forEach(([k,l])=>{ const d=msDate(o,k); if(d&&!msDone(o,k)&&diff(d,TODAY)<=14) rows.push({o,k,l,d}); }));
+  rows.sort((a,b)=>a.d-b.d);
+  document.getElementById('pAct').innerHTML=rows.map(r=>{ const late=r.d<TODAY;
+    return `<tr><td><input type="checkbox" data-no="${r.o.no}" data-k="${r.k}" aria-label="Done"></td><td><b>${esc(r.o.name)}</b> · ${esc(r.o.color)}</td><td>${esc(r.l)}</td>
+      <td><input type="date" data-no="${r.o.no}" data-k="${r.k}" value="${iso(r.d)}" class="${msEdited(r.o,r.k)?'edited':''}"></td>
+      <td><span class="pill ${late?'p-red':diff(r.d,TODAY)<=7?'p-amber':'p-grey'}">${rel(r.d)}</span></td></tr>`; }).join('')
+    || '<tr><td colspan="5" style="color:var(--muted)">Nothing late or due in the next 14 days.</td></tr>';
+}
+function renderProdDetail(){
+  const o=DATA.orders.find(x=>x.no===selP); if(!o) return;
+  document.getElementById('pSel').value=o.no;
+  const n=nextStep(o); const idx=n?MS.findIndex(m=>m[0]===n.k):-1;
+  const after=idx>=0?MS.slice(idx+1).filter(([k])=>!msDone(o,k)).slice(0,2).map(([k,l])=>({l,d:msDate(o,k)})):[];
+  const cls=!n?'green':(n.d&&n.d<TODAY?'red':(n.d&&diff(n.d,TODAY)<=7?'amber':''));
+  const its=getItems(o); const openIts=its.filter(it=>!it.onfloor);
+  const nextBuy=its.filter(it=>!it.bought&&!it.onfloor).map(it=>({it,...itemDates(o,it)})).sort((a,b)=>a.buy-b.buy)[0];
+  const bl=blockers(o);
+  document.getElementById('pLeft').innerHTML=`
+    <div class="next ${cls}"><div class="k">Do next</div>
+      ${n?`<div class="big">${esc(n.l)}</div><div class="when">${fmtW(n.d)} · <b>${rel(n.d)}</b></div>`:'<div class="big">All steps complete</div>'}
+      ${after.length?`<div class="after"><b>After that:</b> ${after.map(a=>esc(a.l)+' — '+fmt(a.d)).join(' → ')}</div>`:''}
+    </div>
+    ${bl.length?`<div class="box" style="background:var(--red-bg)"><div class="k" style="color:var(--red)">Blocking</div><ul>${bl.map(b=>'<li>'+esc(b)+'</li>').join('')}</ul></div>`:''}
+    <div class="box"><div class="k">Materials (${its.length-openIts.length}/${its.length} on floor)</div>
+      ${nextBuy?`Next buy: <b>${esc(nextBuy.it.mat)}</b> by <b class="mono">${fmt(nextBuy.buy)}</b> (${rel(nextBuy.buy)})`:openIts.length?'All bought — waiting to reach the floor.':'All materials on the floor.'}
+      <div style="margin-top:8px"><button class="btn small" id="toProc">Open in procurement →</button></div></div>
+    <div class="box"><div class="k">Order</div>Style no <span class="mono">${o.no}</span> · PO <span class="mono">${esc(o.po)||'—'}</span> · ${num(o.qty)} pairs${o.line?' · '+esc(o.line):''}
+      ${[o.remark,o.leather&&o.leather.rem,o.leather&&o.leather.rem2].filter(Boolean).map(x=>`<div style="color:var(--muted);font-size:13px;margin-top:4px">${esc(x)}</div>`).join('')}</div>`;
+  document.getElementById('pLeft').insertAdjacentHTML('beforeend',`<div class="box"><div class="k">Move this style's whole schedule</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">Shift by <input type="number" id="shiftN" value="7" style="width:70px;font:inherit;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)"> days
+      <button class="btn small" id="shiftLater">Later →</button><button class="btn small" id="shiftEarlier">← Earlier</button><button class="btn small" id="resetAll">Reset all dates to plan</button></div></div>`);
+  const shift=n=>{ MS.forEach(([k])=>{ const d=msDate(o,k); if(d) setMS(o,k,{d:iso(addD(d,n))}); }); renderAll(); toast('Schedule moved '+(n>0?'+':'')+n+' days'); };
+  document.getElementById('shiftLater').onclick=()=>shift(+document.getElementById('shiftN').value||0);
+  document.getElementById('shiftEarlier').onclick=()=>shift(-(+document.getElementById('shiftN').value||0));
+  document.getElementById('resetAll').onclick=()=>{ if(!confirm('Reset all dates for this style back to the production plan?')) return; Object.values(ST.ms[o.no]||{}).forEach(e=>delete e.d); saveST(); renderAll(); toast('Dates reset to plan'); };
+  document.getElementById('toProc').onclick=()=>{ document.getElementById('bSel').value=o.no; showTab('proc'); renderProcDetail(); };
+  document.getElementById('pSteps').innerHTML=MS.map(([k,l],i)=>{
+    const d=msDate(o,k), done=msDone(o,k), isNext=n&&n.k===k;
+    let pill; if(done) pill='<span class="pill p-green">Done</span>';
+    else if(!d) pill='<span class="pill p-grey">No date</span>';
+    else if(d<TODAY) pill=`<span class="pill p-red">${rel(d)}</span>`;
+    else if(diff(d,TODAY)<=7) pill=`<span class="pill p-amber">${rel(d)}</span>`;
+    else pill=`<span class="pill p-grey">${rel(d)}</span>`;
+    return `<tr class="${done?'donerow':''}${isNext?' nextrow':''}"><td><input type="checkbox" data-k="${k}" ${done?'checked':''} aria-label="Done: ${esc(l)}"></td>
+      <td class="stp">${isNext?'<b>▶ ':''}${esc(l)}${isNext?'</b>':''}</td>
+      <td><input type="date" data-k="${k}" value="${iso(d)}" class="${msEdited(o,k)?'edited':''}">${msEdited(o,k)?` <button class="linkish" data-reset="${k}">reset</button>`:''}</td><td>${pill}</td></tr>`;
+  }).join('');
+}
+function renderProd(){ renderProdStats(); renderProdGantt(); renderProdDetail(); }
+
+/* ---------- PROCUREMENT ---------- */
+function renderProcStats(){
+  const all=[]; DATA.orders.forEach(o=>{ const p=prodDate(o); if(p&&p<=TODAY) return; getItems(o).forEach(it=>all.push({o,it,s:itemStatus(o,it),...itemDates(o,it)})); });
+  const late=all.filter(x=>x.s.r<=2).length, buyW=all.filter(x=>x.s.r===3).length;
+  const delW=all.filter(x=>!x.it.onfloor&&x.floor>=TODAY&&diff(x.floor,TODAY)<=7).length;
+  const bought=all.filter(x=>x.it.bought||x.it.onfloor).length, floor=all.filter(x=>x.it.onfloor).length, n=all.length||1;
+  document.getElementById('bStats').innerHTML=[
+    [late?'red':'',late,'material lines late to buy or late to floor','soon'],
+    [buyW?'amber':'',buyW,'to buy in the next 7 days','soon'],
+    [delW?'amber':'',delW,'to deliver to the floor in the next 7 days','floor'],
+    ['green',Math.round(bought/n*100)+'%',`bought · ${bought} of ${all.length} lines`,'',bought/n],
+    ['green',Math.round(floor/n*100)+'%',`on the floor · ${floor} of ${all.length} lines`,'',floor/n]
+  ].map(([c,v,l,f,p])=>`<div class="kpi ${c}" ${f?`data-f="${f}"`:''}><div class="n">${v}</div><div class="l">${l}</div>${p!==undefined?`<div class="pb"><i style="width:${p*100}%"></i></div>`:''}</div>`).join('');
+  // weekly stacked
+  const start=mondayOf(TODAY); const wk=[{lab:'Late',ws:null,done:0,open:0}];
+  for(let i=0;i<10;i++) wk.push({lab:fmt(addD(start,i*7)),ws:addD(start,i*7),done:0,open:0});
+  all.forEach(x=>{ const isDone=x.it.bought||x.it.onfloor; if(x.buy<start){ if(!isDone) wk[0].open++; return; }
+    const i=Math.floor(diff(x.buy,start)/7)+1; if(i<wk.length) wk[i][isDone?'done':'open']++; });
+  const mx=Math.max(1,...wk.map(w=>w.done+w.open));
+  document.getElementById('bWeeks').innerHTML=`<div class="vb">${wk.map((w,i)=>`<div class="c${i===1?' now':''}"><span class="val">${w.done+w.open||''}</span>
+      <div class="stk" style="height:${(w.done+w.open)/mx*120}px"><i style="display:block;height:${w.done/mx*120}px;background:var(--green)"></i><i style="display:block;height:${w.open/mx*120}px;background:${i===0?'var(--red)':'var(--amber)'}"></i></div>
+      <span class="lb">${w.lab.replace(' ','\u00a0')}</span></div>`).join('')}</div>
+    <div class="minileg"><span><i style="background:var(--green)"></i>bought</span><span><i style="background:var(--amber)"></i>still to buy</span><span><i style="background:var(--red)"></i>late, still to buy</span><span>Weeks start Monday · orange = this week</span></div>`;
+  // material totals still to buy
+  const g={}; all.filter(x=>!x.it.bought&&!x.it.onfloor).forEach(x=>{ const key=(x.it.mat==='Upper leather'||x.it.mat==='Lining')?x.it.spec:x.it.mat; const k=key+'|'+x.it.unit; (g[k]=g[k]||{key,unit:x.it.unit,q:0,n:0,early:null}); g[k].q+=+x.it.qty||0; g[k].n++; if(!g[k].early||x.buy<g[k].early) g[k].early=x.buy; });
+  const arr=Object.values(g).sort((a,b)=>b.q-a.q); const mq=Math.max(1,...arr.map(a=>a.q));
+  document.getElementById('bMat').innerHTML=arr.map(a=>`<div class="hb" title="${a.n} lines · first needed ${fmt(a.early)}"><span class="nm">${esc(a.key)}</span><span class="tr"><i style="width:${a.q/mq*100}%;background:${a.early<TODAY?'var(--red)':'var(--ph4)'}"></i></span><span class="v">${num(a.q)} ${esc(a.unit)}</span></div>`).join('')
+    +'<div class="minileg"><span><i style="background:var(--red)"></i>some lines already late</span><span>Quantities are pairs until you enter real amounts per style.</span></div>' || '';
+}
+function renderProcGantt(){
+  const R=range(); const gl=gridLines(R); let h=headRow(R);
+  sortedOrders().forEach(o=>{
+    const p=prodDate(o); const its=getItems(o);
+    let marks='';
+    const open=its.filter(it=>!it.onfloor);
+    // delivery windows and diamonds per buy date (grouped)
+    const byBuy={};
+    its.forEach(it=>{ const {buy,floor}=itemDates(o,it); const k=iso(buy); (byBuy[k]=byBuy[k]||{buy,floor,its:[]}).its.push(it); });
+    Object.values(byBuy).forEach(g=>{
+      const st=g.its.map(it=>itemStatus(o,it)); const worst=Math.min(...st.map(s=>s.r));
+      const col=worst<=2?'var(--pr1)':worst===3?'var(--pr2)':worst===9?'var(--pr4)':worst===8?'var(--muted)':'var(--pr3)';
+      if(g.floor>g.buy) marks+=`<div class="bar" style="left:${X(g.buy,R)}px;width:${diff(g.floor,g.buy)*PX}px;background:var(--pr3);opacity:.35" title="Delivery window"></div>`;
+      marks+=`<div class="dia" data-no="${o.no}" data-ids="${esc(g.its.map(i=>i.id).join(','))}" style="left:${X(g.buy,R)}px;background:${col}" title="Buy by ${fmt(g.buy)}: ${esc(g.its.map(i=>i.mat).join(', '))} — drag to move"></div>`;
+    });
+    const fl=its.map(it=>itemDates(o,it).floor).sort((a,b)=>a-b)[0];
+    if(fl&&p) marks+=seg(fl,p,R,'var(--pr4)','On floor');
+    if(p) marks+=`<div class="flagm" style="left:${X(p,R)}px" title="Production start ${fmt(p)}"></div>`;
+    const nb=open.filter(it=>!it.bought).length; const started=p&&p<=TODAY;
+    h+=`<div class="g-row${selB===o.no?' sel':''}" data-no="${o.no}">${label(o,started?'in production':nb?nb+' to buy':(open.length?open.length+' to receive':'all on floor'))}<div class="g-track" style="width:${R.W}px">${gl}${marks}</div></div>`;
+  });
+  const g=document.getElementById('gProc'); const sx=g.scrollLeft; g.innerHTML=h;
+  if(!renderProcGantt.scrolled){ g.scrollLeft=Math.max(0,X(TODAY,R)-420); renderProcGantt.scrolled=true; } else g.scrollLeft=sx;
+}
+let selB='all';
+function renderProcDetail(){
+  const sel=document.getElementById('bSel'); selB=sel.value; const f=document.getElementById('bFilter');
+  const body=document.getElementById('bBody');
+  f.style.display=selB==='all'?'':'none';
+  if(selB==='all'){
+    const rows=[]; DATA.orders.forEach(o=>getItems(o).forEach(it=>{ const s=itemStatus(o,it); const dts=itemDates(o,it);
+      const fv=f.value;
+      if(fv==='soon'&&!( !it.bought&&!it.onfloor&&s.r<8&&diff(dts.buy,TODAY)<=14 || s.r<=2 )) return;
+      if(fv==='open'&&(it.bought||it.onfloor||s.r===8)) return;
+      if(fv==='floor'&&!(it.bought&&!it.onfloor)) return;
+      rows.push({o,it,s,...dts}); }));
+    rows.sort((a,b)=>a.buy-b.buy||a.o.name.localeCompare(b.o.name));
+    let html='', last=''; rows.forEach(r=>{ const k=iso(r.buy);
+      if(k!==last){ last=k; const n=rows.filter(x=>iso(x.buy)===k).length; html+=`<tr class="grp"><td colspan="8">Buy by ${fmtW(r.buy)} <span class="pill ${r.buy<TODAY?'p-red':diff(r.buy,TODAY)<=7?'p-amber':'p-grey'}">${rel(r.buy)}</span> <span style="font-weight:500;color:var(--muted)">· ${n} item${n>1?'s':''}</span></td></tr>`; }
+      html+=itemRow(r.o,r.it,false); });
+    body.innerHTML=`<div class="tbl"><table><thead><tr><th>Style</th><th>Material</th><th class="num">Qty</th><th>On floor by</th><th>Production</th><th>Status</th><th>Bought</th><th>On floor</th></tr></thead><tbody>${html||'<tr><td colspan="8" style="color:var(--muted)">Nothing to show for this filter.</td></tr>'}</tbody></table></div>
+      <p class="note">Buy date = production start − ${cfg().fl} days on floor − ${cfg().bl} days for purchase. Pick a single style in "Show" to edit its materials, quantities and dates.</p>`;
+  } else {
+    const o=DATA.orders.find(x=>x.no===selB); const its=getItems(o);
+    body.innerHTML=`<div class="box" style="display:flex;flex-wrap:wrap;gap:18px"><div><div class="k">Production start</div><b class="mono">${fmtW(prodDate(o))}</b></div><div><div class="k">Pairs</div><b class="mono">${num(o.qty)}</b></div><div><div class="k">PO</div><b class="mono">${esc(o.po)||'—'}</b></div>${blockers(o).map(b=>`<div style="color:var(--red);font-weight:600;align-self:center">${esc(b)}</div>`).join('')}</div>
+      <div class="tbl"><table><thead><tr><th>Material</th><th>Details</th><th>Qty</th><th>Unit</th><th>Buy by</th><th>On floor by</th><th>Status</th><th>Bought</th><th>On floor</th><th></th></tr></thead><tbody>${its.map(it=>itemRow(o,it,true)).join('')}</tbody></table></div>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button class="btn" id="addIt">+ Add material</button><button class="btn" id="resetIt">Reset to sheet</button></div>
+      <p class="note">Every field is editable. Buy-by and on-floor dates are calculated from production start unless you type your own (shown in blue). Changes are saved automatically in this browser — use "Save backup" or "Download Excel" to share them.</p>`;
+    document.getElementById('addIt').onclick=()=>{ editItems(o).push({id:o.no+'-'+Date.now(),mat:'New material',spec:'',qty:o.qty,unit:'pairs',bought:false,onfloor:false,buy:'',floor:''}); saveST(); renderProc(); };
+    document.getElementById('resetIt').onclick=()=>{ if(confirm('Reset materials for this style to the sheet values?')){ delete ST.items[o.no]; delete CACHE[o.no]; saveST(); renderProc(); toast('Reset'); } };
+  }
+}
+function itemRow(o,it,edit){
+  const s=itemStatus(o,it), d=itemDates(o,it); const a=`data-no="${o.no}" data-id="${esc(it.id)}"`;
+  if(!edit) return `<tr><td><b>${esc(o.name)}</b> · ${esc(o.color)}</td><td>${esc(it.mat)}<div style="color:var(--muted);font-size:12.5px">${esc(it.spec)}</div></td>
+    <td class="mono" style="text-align:right">${num(it.qty)} ${esc(it.unit)}</td><td class="mono">${fmt(d.floor)}</td><td class="mono">${fmt(d.prod)}</td>
+    <td><span class="pill ${s.c}">${s.t}</span></td><td><input type="checkbox" ${a} data-f="bought" ${it.bought?'checked':''} aria-label="Bought"></td><td><input type="checkbox" ${a} data-f="onfloor" ${it.onfloor?'checked':''} aria-label="On floor"></td></tr>`;
+  return `<tr><td><input type="text" ${a} data-f="mat" value="${esc(it.mat)}" style="width:150px"></td><td><input type="text" ${a} data-f="spec" value="${esc(it.spec)}" style="width:230px"></td>
+    <td><input type="number" ${a} data-f="qty" value="${esc(it.qty)}"></td><td><input type="text" ${a} data-f="unit" value="${esc(it.unit)}" style="width:70px"></td>
+    <td><input type="date" ${a} data-f="buy" value="${iso(d.buy)}" class="${it.buy?'edited':''}"></td><td><input type="date" ${a} data-f="floor" value="${iso(d.floor)}" class="${it.floor?'edited':''}"></td>
+    <td><span class="pill ${s.c}">${s.t}</span></td><td><input type="checkbox" ${a} data-f="bought" ${it.bought?'checked':''} aria-label="Bought"></td><td><input type="checkbox" ${a} data-f="onfloor" ${it.onfloor?'checked':''} aria-label="On floor"></td>
+    <td><button class="btn x" ${a} data-del="1" title="Remove">×</button></td></tr>`;
+}
+function renderDayPlan(){
+  const span=+document.getElementById('dRange').value, what=document.getElementById('dWhat').value;
+  const ev={}; const add=(d,kind,o,it,done)=>{ const over=d<TODAY; if(over&&done) return; if(!over&&diff(d,TODAY)>span) return; const k=over?'over':iso(d); (ev[k]=ev[k]||{d,over,buy:[],del:[]})[kind].push({o,it,d,done:!!done}); };
+  DATA.orders.forEach(o=>{ const p=prodDate(o); if(p&&p<=TODAY) return;
+    getItems(o).forEach(it=>{ const d=itemDates(o,it);
+      if(what!=='del') add(d.buy,'buy',o,it,it.bought||it.onfloor);
+      if(what!=='buy') add(d.floor,'del',o,it,it.onfloor); }); });
+  const keys=Object.keys(ev).sort((a,b)=>a==='over'?-1:b==='over'?1:a.localeCompare(b));
+  document.getElementById('dayPlan').innerHTML=keys.map(k=>{ const e=ev[k];
+    const head=e.over?'Overdue — still open':fmtW(e.d)+(diff(e.d,TODAY)===0?' · Today':diff(e.d,TODAY)===1?' · Tomorrow':'');
+    const col=(kind,title)=>{ const arr=e[kind]; if(!arr.length) return '';
+      const rows=arr.map(x=>({...x,kind})); 
+      const g={}; rows.forEach(x=>{ const kk=x.it.mat+'||'+x.it.spec; (g[kk]=g[kk]||[]).push(x); });
+      const body=Object.values(g).sort((a,b)=>a[0].it.mat.localeCompare(b[0].it.mat)).map(arr2=>{
+        const u=new Set(arr2.map(x=>x.it.unit)); const tot=u.size===1?num(arr2.reduce((s,x)=>s+(+x.it.qty||0),0))+' '+esc([...u][0]):'';
+        return `<div class="mg"><div class="mh">${esc(arr2[0].it.mat)} — ${esc(arr2[0].it.spec)}${arr2.length>1&&tot?` <span class="tot">· total ${tot}</span>`:''}</div>${arr2.map(x=>{
+          const f=kind==='buy'?'bought':'onfloor';
+          const df=kind==='buy'?'buy':'floor';
+          return `<div class="ln${x.done?' done':''}"><label><input type="checkbox" ${x.done?'checked':''} data-no="${x.o.no}" data-id="${esc(x.it.id)}" data-f="${f}"><span><b>${esc(x.o.name)}</b> · ${esc(x.o.color)}</span>${e.over?` <span class="pill p-red">was due ${fmt(x.d)}</span>`:''}${kind==='del'&&x.it.bought?' <span class="pill p-blue">bought</span>':''}</label><input type="date" title="Change ${kind==='buy'?'buy':'delivery'} date" data-no="${x.o.no}" data-id="${esc(x.it.id)}" data-f="${df}" value="${iso(x.d)}" class="${x.it[df]?'edited':''}"><span class="q">${num(x.it.qty)} ${esc(x.it.unit)}<br>cut ${fmt(prodDate(x.o))}</span></div>`; }).join('')}</div>`; }).join('');
+      return `<div class="dcol${(what!=='both'||!e[kind==='buy'?'del':'buy'].length)?' solo':''}"><h4>${title} (${arr.filter(x=>!x.done).length} open)</h4>${body}</div>`; };
+    return `<div class="day${e.over?' over':''}${!e.over&&diff(e.d,TODAY)===0?' today':''}"><div class="dh">${head}<span class="cnt">${[e.buy.length?e.buy.filter(x=>!x.done).length+' of '+e.buy.length+' still to buy':'',e.del.length?e.del.filter(x=>!x.done).length+' of '+e.del.length+' still to deliver':''].filter(Boolean).join(' · ')}</span></div>
+      <div class="dcols">${col('buy','Buy')}${col('del','Deliver to factory floor')}</div></div>`; }).join('')
+    || '<div style="color:var(--muted)">Nothing to buy or deliver in this period.</div>';
+}
+function renderProc(){ renderProcStats(); renderDayPlan(); renderProcGantt(); renderProcDetail(); }
+
+/* ---------- global render ---------- */
+function fillSelects(){
+  const os=sortedOrders(); const opt=o=>`<option value="${o.no}">${esc(o.name)} · ${esc(o.color)} — ${o.no} (cut ${fmt(prodDate(o))})</option>`;
+  const p=document.getElementById('pSel'), b=document.getElementById('bSel');
+  p.innerHTML=os.map(opt).join(''); b.innerHTML='<option value="all">All styles — buying list by date</option>'+os.map(opt).join('');
+  if(!selP||!os.find(o=>o.no===selP)){ const firstOpen=os.find(o=>{const n=nextStep(o); return n;}); selP=(firstOpen||os[0]).no; }
+  p.value=selP; b.value=selB&&(selB==='all'||os.find(o=>o.no===selB))?selB:'all';
+}
+function renderAll(){
+  TODAY=toDate(document.getElementById('asof').value)||toDate(iso(new Date()));
+  const O=DATA.orders; const pos=[...new Set(O.map(o=>o.po).filter(Boolean))];
+  document.getElementById('subline').textContent=`${O.length} styles · ${num(O.reduce((a,o)=>a+o.qty,0))} pairs · PO ${pos.join(', ')} · ${fmtW(TODAY)}`;
+  fillSelects(); renderProd(); renderProc();
+}
+
+/* ---------- events ---------- */
+function showTab(v){ document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.v===v)); document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v)); window.scrollTo({top:0}); }
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.v));
+document.getElementById('gProd').addEventListener('click',e=>{ if(DRAG.justDragged) return; const r=e.target.closest('.g-row[data-no]'); if(!r) return; selP=r.dataset.no; renderProdGantt(); renderProdDetail(); document.getElementById('prodDetailCard').scrollIntoView({behavior:'smooth',block:'start'}); });
+document.getElementById('gProc').addEventListener('click',e=>{ if(DRAG.justDragged) return; const r=e.target.closest('.g-row[data-no]'); if(!r) return; document.getElementById('bSel').value=r.dataset.no; renderProc(); document.getElementById('bBody').scrollIntoView({behavior:'smooth',block:'center'}); });
+document.getElementById('pSel').onchange=e=>{ selP=e.target.value; renderProdGantt(); renderProdDetail(); };
+const step=dir=>{ const os=sortedOrders(); const i=os.findIndex(o=>o.no===selP); selP=os[(i+dir+os.length)%os.length].no; renderProdGantt(); renderProdDetail(); };
+document.getElementById('pPrev').onclick=()=>step(-1); document.getElementById('pNext').onclick=()=>step(1);
+function msChange(e){
+  const t=e.target, k=t.dataset.k; if(!k) return; const o=DATA.orders.find(x=>x.no===(t.dataset.no||selP)); if(!o) return;
+  if(t.type==='checkbox'){ setMS(o,k,{done:t.checked}); toast(t.checked?'Marked done':'Marked not done'); }
+  else if(t.type==='date'){ if(!t.value) return; setMS(o,k,{d:t.value}); toast('Date saved — '+SHORT[k]+' '+fmt(toDate(t.value))); }
+  renderAll();
+}
+document.getElementById('pSteps').addEventListener('change',msChange);
+document.getElementById('pAct').addEventListener('change',msChange);
+document.getElementById('pSteps').addEventListener('click',e=>{ const k=e.target.dataset&&e.target.dataset.reset; if(!k) return; const o=DATA.orders.find(x=>x.no===selP); delete ST.ms[o.no][k].d; saveST(); renderAll(); toast('Date reset to plan'); });
+document.getElementById('bSel').onchange=()=>{ renderProcGantt(); renderProcDetail(); };
+document.getElementById('bFilter').onchange=renderProcDetail;
+document.getElementById('bStats').addEventListener('click',e=>{ const s=e.target.closest('[data-f]'); if(!s) return; document.getElementById('bSel').value='all'; document.getElementById('bFilter').value=s.dataset.f; renderProc(); document.getElementById('bBody').scrollIntoView({behavior:'smooth',block:'start'}); });
+function itemChange(e){
+  const t=e.target, f=t.dataset.f; if(!f) return; const o=DATA.orders.find(x=>x.no===t.dataset.no); const it=editItems(o).find(x=>x.id===t.dataset.id); if(!it) return;
+  if(t.type==='checkbox'){ it[f]=t.checked; if(f==='onfloor'&&t.checked) it.bought=true; }
+  else if(f==='qty') it.qty=+t.value||0;
+  else if(f==='buy'||f==='floor'){ if(!t.value) return; it[f]=t.value; }
+  else it[f]=t.value;
+  saveST(); renderProc(); renderProdGantt(); renderProdDetail(); renderProdStats(); toast('Saved');
+}
+document.getElementById('bBody').addEventListener('change',itemChange);
+document.getElementById('dayPlan').addEventListener('change',itemChange);
+['dRange','dWhat'].forEach(id=>document.getElementById(id).addEventListener('change',renderDayPlan));
+document.getElementById('dPrint').onclick=()=>{ document.body.classList.add('printday'); window.print(); setTimeout(()=>document.body.classList.remove('printday'),500); };
+document.getElementById('bBody').addEventListener('click',e=>{ const t=e.target; if(!t.dataset||!t.dataset.del) return; const o=DATA.orders.find(x=>x.no===t.dataset.no);
+  ST.items[o.no]=editItems(o).filter(x=>x.id!==t.dataset.id); saveST(); renderProc(); toast('Removed'); });
+['fl','bl','sun'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{ ST.cfg=cfg(); saveST(); renderAll(); }));
+document.getElementById('asof').addEventListener('change',renderAll);
+
+/* drag on gantt */
+const DRAG={justDragged:false};
+document.addEventListener('pointerdown',e=>{
+  const bar=e.target.closest('#gProd .bars .bar'); const dia=e.target.closest('#gProc .dia');
+  if(!bar&&!dia) return; e.preventDefault();
+  const el=bar?bar.parentElement:dia; el.setPointerCapture&&el.setPointerCapture(e.pointerId);
+  Object.assign(DRAG,{el,kind:bar?'prod':'proc',x0:e.clientX,left0:parseFloat(el.style.left)||0,days:0,on:true});
+  document.body.classList.add('dragging');
+});
+document.addEventListener('pointermove',e=>{ if(!DRAG.on) return;
+  const days=Math.round((e.clientX-DRAG.x0)/PX); DRAG.days=days; DRAG.el.style.left=(DRAG.left0+days*PX)+'px';
+  const tip=document.getElementById('dragtip'); tip.style.display=days?'block':'none'; tip.style.left=(e.clientX+12)+'px'; tip.style.top=(e.clientY-30)+'px';
+  let to=''; const o=DATA.orders.find(x=>x.no===DRAG.el.dataset.no);
+  if(DRAG.kind==='prod'){ to='production start → '+fmt(addD(prodDate(o),days)); }
+  else { const it=getItems(o).find(i=>i.id===DRAG.el.dataset.ids.split(',')[0]); to='buy by → '+fmt(addD(itemDates(o,it).buy,days)); }
+  tip.textContent=(days>0?'+':'')+days+' days · '+to;
+});
+document.addEventListener('pointerup',()=>{ if(!DRAG.on) return; DRAG.on=false; document.body.classList.remove('dragging'); document.getElementById('dragtip').style.display='none';
+  const days=DRAG.days; if(!days){ DRAG.el.style.left=DRAG.left0? DRAG.left0+'px':''; return; }
+  DRAG.justDragged=true; setTimeout(()=>DRAG.justDragged=false,50);
+  const o=DATA.orders.find(x=>x.no===DRAG.el.dataset.no);
+  if(DRAG.kind==='prod'){ MS.forEach(([k])=>{ const d=msDate(o,k); if(d) setMS(o,k,{d:iso(addD(d,days))}); }); toast(o.name+' '+o.color+': schedule moved '+(days>0?'+':'')+days+' days'); }
+  else { const ids=DRAG.el.dataset.ids.split(','); const its=editItems(o); its.filter(i=>ids.includes(i.id)).forEach(i=>{ i.buy=iso(addD(itemDates(o,i).buy,days)); }); saveST(); toast('Buy date moved '+(days>0?'+':'')+days+' days'); }
+  renderAll();
+});
+
+/* export / backup / load */
+function download(name,blob){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); }
+document.getElementById('xlsBtn').onclick=()=>{
+  const plan=[['Style','Style no','Colour','Pairs','PO',...MS.flatMap(([k,l])=>[l,l+' done'])]];
+  sortedOrders().forEach(o=>plan.push([o.name,o.no,o.color,o.qty,o.po,...MS.flatMap(([k])=>[iso(msDate(o,k)),msDone(o,k)?'Yes':''])]));
+  const buy=[['Buy by','Style','Style no','Colour','Material','Details','Qty','Unit','On floor by','Production start','Status','Bought','On floor']];
+  const rows=[]; DATA.orders.forEach(o=>getItems(o).forEach(it=>{ const d=itemDates(o,it); rows.push([iso(d.buy),o.name,o.no,o.color,it.mat,it.spec,it.qty,it.unit,iso(d.floor),iso(d.prod),itemStatus(o,it).t,it.bought?'Yes':'',it.onfloor?'Yes':'']); }));
+  rows.sort((a,b)=>a[0].localeCompare(b[0])); buy.push(...rows);
+  const stamp=iso(TODAY);
+  if(typeof XLSX!=='undefined'){ const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(plan),'Production'); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(buy),'Procurement'); XLSX.writeFile(wb,'pakkar_plan_'+stamp+'.xlsx'); }
+  else { const csv=buy.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n'); download('pakkar_procurement_'+stamp+'.csv',new Blob([csv],{type:'text/csv'})); }
+};
+document.getElementById('saveBtn').onclick=()=>{ download('pakkar_planner_backup_'+iso(TODAY)+'.json',new Blob([JSON.stringify({saved:new Date().toISOString(),state:ST},null,1)],{type:'application/json'})); toast('Backup downloaded'); };
+const fB=document.getElementById('fBackup'); document.getElementById('openBtn').onclick=()=>fB.click();
+fB.onchange=async()=>{ try{ const j=JSON.parse(await fB.files[0].text()); if(!j.state||!j.state.ms) throw 0; ST=j.state; saveST(); document.getElementById('fl').value=ST.cfg.fl; document.getElementById('bl').value=ST.cfg.bl; renderAll(); toast('Backup loaded'); }catch(e){ alert('That file is not a planner backup.'); } fB.value=''; };
+const fS=document.getElementById('fSheets'); document.getElementById('loadBtn').onclick=()=>fS.click();
+fS.onchange=async()=>{
+  if(typeof XLSX==='undefined'){ alert('Spreadsheet reader could not load. Check the internet connection.'); return; }
+  const sheets={...RAW.sheets};
+  for(const f of fS.files){ const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+    wb.SheetNames.forEach(sn=>{ const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,raw:true,defval:null});
+      const kind=['LEATHER CUT','UPPER LEATHER TO BE USED','CFM ETD','CFM STATUS'].find(k=>findHeader(rows,k)>=0);
+      if(kind){ for(const [k,v] of Object.entries(sheets)) if(findHeader(v,kind)>=0) delete sheets[k]; sheets[f.name+'::'+sn]=rows; } }); }
+  const p=parse(sheets); if(!p.orders.length){ alert('No production plan found (needs a "Leather cut date" column).'); return; }
+  RAW={sheets,source:[...fS.files].map(f=>f.name).join(' + ')}; DATA=p; CACHE={}; renderAll(); toast('Sheets loaded — your ticks and edits are kept'); fS.value='';
+};
+
+/* ---------- init ---------- */
+ST=loadST(); ST.cfg=ST.cfg||{fl:7,bl:7};
+document.getElementById('fl').value=ST.cfg.fl; document.getElementById('bl').value=ST.cfg.bl; document.getElementById('sun').value=ST.cfg.sun||'sat';
+document.getElementById('asof').value=iso(new Date());
+DATA=parse(RAW.sheets); renderAll();
+</script>
+</body>
+</html>
