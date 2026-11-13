@@ -27,7 +27,7 @@
   --ph1:#5C6F8E; --ph2:#C98F25; --ph3:#2FA38B; --ph4:#4E7CC8; --ph5:#3A4760;
   --pr1:#E0574C; --pr2:#D19A30; --pr3:#4E7CC8; --pr4:#2FA38B; }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Inter,system-ui,sans-serif}
 .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
 .wrap{max-width:1400px;margin:0 auto;padding:0 20px}
 header.top{background:var(--navy);color:#fff;position:relative;overflow:hidden}
@@ -43,7 +43,7 @@ h1{font:600 24px/1.15 "IBM Plex Serif",serif;margin:0 0 4px}
 .hbtn:hover{background:#1A2B50}
 nav.tabs{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
 nav.tabs .wrap{display:flex;gap:4px}
-nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:14px 18px;font:600 16px Inter,sans-serif;color:var(--muted);cursor:pointer}
+nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:15px 20px;font:700 17px Inter,sans-serif;color:var(--muted);cursor:pointer}
 nav.tabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
 main{padding:18px 0 60px}
 section.view{display:none} section.view.on{display:block}
@@ -53,8 +53,8 @@ section.view{display:none} section.view.on{display:block}
 .stat .l{font-size:13px;color:var(--muted);max-width:180px;line-height:1.25}
 .stat.red .n{color:var(--red)} .stat.amber .n{color:var(--amber)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px;min-width:0}
-.card h2{font:600 18px/1.25 "IBM Plex Serif",serif;margin:0 0 4px}
-.hint{font-size:13px;color:var(--muted);margin:0 0 12px}
+.card h2{font:600 21px/1.25 "IBM Plex Serif",serif;margin:0 0 4px}
+.hint{font-size:14.5px;color:var(--muted);margin:0 0 14px}
 .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin:0 0 10px}
 .legend i{display:inline-block;width:14px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .legend i.today{width:2px;height:12px;background:var(--orange)}
@@ -115,7 +115,7 @@ td input[type=number]{width:90px}
 td input.edited{border-color:var(--blue);background:var(--blue-bg)}
 .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
 .p-red{background:var(--red-bg);color:var(--red)} .p-amber{background:var(--amber-bg);color:var(--amber)} .p-green{background:var(--green-bg);color:var(--green)} .p-blue{background:var(--blue-bg);color:var(--blue)} .p-grey{background:var(--grey-bg);color:var(--muted)}
-.btn{font:600 14px Inter,sans-serif;padding:8px 14px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.btn{font:600 15px Inter,sans-serif;padding:10px 16px;min-height:42px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 .btn:hover{background:var(--soft)}
 .btn.small{font-size:12.5px;padding:4px 9px}
 .btn.x{border:0;background:none;color:var(--muted);font-size:18px;padding:2px 6px}
@@ -139,7 +139,7 @@ td input.edited{border-color:var(--blue);background:var(--blue-bg)}
 .ln input[type=date]{width:auto;height:auto;flex:0 0 auto}
 .ln .q{font:13px "IBM Plex Mono",monospace;color:var(--muted);margin-left:auto;white-space:nowrap;text-align:right}
 .ln.done{color:var(--muted);text-decoration:line-through}
-@media print{body.printday #v-prod,body.printday #v-proc>:not(#dayCard),body.printday header,body.printday .pickrow{display:none!important}body.printday #v-proc{display:block!important}}
+@media print{body.printday #v-todo,body.printday #v-prod,body.printday #v-proc>:not(#dayCard),body.printday header,body.printday .pickrow{display:none!important}body.printday #v-proc{display:block!important}}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0 4px}
 .kpi{background:var(--soft);border-radius:10px;padding:12px 14px;border:1px solid transparent}
 .kpi[data-f]{cursor:pointer} .kpi[data-f]:hover{border-color:var(--line)}
@@ -196,37 +196,45 @@ nav.tabs button.on{border-bottom-color:var(--orange)}
 .card{box-shadow:0 1px 2px rgba(15,30,61,.05)}
 .panel{min-width:0}
 /* what to do */
-.td-bar{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}
-.seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--soft);padding:4px;border-radius:10px}
-.seg button{font:600 14px Inter,sans-serif;border:0;background:none;color:var(--muted);padding:8px 12px;border-radius:7px;cursor:pointer;display:flex;gap:7px;align-items:center;white-space:nowrap}
-.seg button:hover{color:var(--ink)}
-.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
-.seg button .c{font:500 12px "IBM Plex Mono",monospace;background:var(--grey-bg);color:var(--muted);border-radius:999px;padding:1px 7px;min-width:22px;text-align:center}
-.seg button.on .c{background:var(--blue-bg);color:var(--blue)}
-.seg button.late .c{background:var(--red-bg);color:var(--red)}
-.seg-sm button{font-size:12.5px;padding:6px 10px}
-.td-day{font:700 13px Inter,sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px}
+.td-bar{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:700 15.5px Inter,sans-serif;border:1.5px solid var(--line);background:var(--card);color:var(--muted);padding:9px 15px;border-radius:999px;cursor:pointer;display:flex;gap:8px;align-items:center;white-space:nowrap;min-height:44px}
+.seg button:hover{color:var(--ink);border-color:var(--muted)}
+.seg button.on{background:var(--ink);border-color:var(--ink);color:var(--card)}
+.seg button .c{font:600 13px Inter,sans-serif;background:var(--soft);color:var(--muted);border-radius:999px;padding:1px 8px;min-width:24px;text-align:center}
+.seg button.on .c{background:rgba(255,255,255,.22);color:inherit}
+.seg button.late .c{background:var(--red);color:#fff}
+.seg-sm button{font-size:14px;padding:6px 12px;min-height:38px}
+.td-day{font:800 13.5px Inter,sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:18px 2px 8px}
 .td-day:first-child{margin-top:0}
 .td-day.now{color:var(--orange)}
-.td-row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:8px;margin-bottom:6px;background:var(--card)}
+.td-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 16px;align-items:center;padding:14px 14px 14px 16px;border:1px solid var(--line);border-left:6px solid var(--muted);border-radius:12px;margin-bottom:8px;background:var(--card)}
 .td-row.t-prod{border-left-color:var(--ph4)} .td-row.t-buy{border-left-color:var(--ph2)} .td-row.t-del{border-left-color:var(--ph3)}
 .td-row.late{background:var(--red-bg)}
-.td-row input{width:20px;height:20px;accent-color:var(--emerald);cursor:pointer;margin:0}
-.td-what{font-weight:600;font-size:14.5px;line-height:1.3}
-.td-what .pill{margin-right:6px;vertical-align:1px}
-.td-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.td-what{font-weight:700;font-size:16.5px;line-height:1.3}
+.td-what .pill{margin-right:8px;vertical-align:2px;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.td-sub{font-size:14.5px;color:var(--muted);margin-top:4px}
 .td-sub b{color:var(--ink)}
-.td-when{text-align:right;font:500 13px "IBM Plex Mono",monospace;white-space:nowrap}
-.td-when small{display:block;font:600 11.5px Inter,sans-serif;color:var(--muted);margin-top:2px}
+.td-when{text-align:right;font:700 14.5px Inter,sans-serif;white-space:nowrap}
+.td-when small{display:block;font:700 13px Inter,sans-serif;color:var(--muted);margin-top:2px}
 .td-row.late .td-when small{color:var(--red)}
-.td-empty{color:var(--muted);padding:18px 4px}
+.td-done{position:relative;display:block;cursor:pointer}
+.td-done input{position:absolute;opacity:0;width:1px;height:1px}
+.td-done span{display:flex;align-items:center;justify-content:center;min-width:104px;min-height:48px;padding:0 14px;border-radius:10px;border:2px solid var(--emerald);color:var(--emerald);font:800 15px Inter,sans-serif;background:var(--card);white-space:nowrap}
+.td-done:hover span{background:var(--emerald);color:#fff}
+.td-done input:focus-visible+span{outline:3px solid var(--blue);outline-offset:2px}
+.td-empty{color:var(--muted);padding:22px 6px;font-size:16px;font-weight:600}
 .td-more{margin-top:6px}
 @media(max-width:700px){
-  .seg{width:100%} .seg button{flex:1 1 auto;justify-content:center;padding:8px 8px}
-  .td-row{grid-template-columns:22px minmax(0,1fr);grid-template-areas:"c w" "c m" "c t"}
-  .td-row>input{grid-area:c;align-self:start;margin-top:2px} .td-main{grid-area:w} .td-when{grid-area:t;text-align:left}
-  .td-when small{display:inline;margin-left:6px}
+  .seg button{padding:8px 12px;font-size:15px}
+  .td-row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"m m" "t b";gap:10px 12px}
+  .td-main{grid-area:m} .td-when{grid-area:t;text-align:left} .td-done{grid-area:b}
 }
+/* settings & files panel */
+.setbtn{display:flex;align-items:center;gap:8px;height:42px;padding:0 14px;font-weight:600}
+.ctls[hidden]{display:none!important}
+.ctls{width:100%;padding:14px;margin-top:2px;background:rgba(255,255,255,.05);border:1px solid #2C3F69;border-radius:10px}
+@media(min-width:701px){ .ctls{justify-content:flex-start} }
 /* weekly bar charts: scroll sideways instead of squashing labels */
 .vb{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
 .vb .c{min-width:38px}
@@ -270,7 +278,8 @@ nav.tabs button.on{border-bottom-color:var(--orange)}
 <body>
 <header class="top"><div class="wrap">
   <div><h1>Pakkar Factory Planner</h1><div class="sub" id="subline"></div></div>
-  <div class="ctls">
+  <button class="hbtn setbtn" id="setToggle" aria-expanded="false" aria-controls="setPanel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings &amp; files</span></button>
+  <div class="ctls" id="setPanel" hidden>
     <div class="ctl"><label for="asof">Today</label><input type="date" id="asof"></div>
     <div class="ctl"><label for="fl">On floor · days before production</label><input type="number" id="fl" min="0" value="7"></div>
     <div class="ctl"><label for="bl">Buy · days before floor</label><input type="number" id="bl" min="0" value="7"></div>
@@ -286,37 +295,42 @@ nav.tabs button.on{border-bottom-color:var(--orange)}
 </div></header>
 
 <nav class="tabs"><div class="wrap">
-  <button data-v="prod" class="on">Production</button>
-  <button data-v="proc">Procurement</button>
+  <button data-v="todo" class="on">To do</button>
+  <button data-v="prod">Production</button>
+  <button data-v="proc">Materials</button>
 </div></nav>
 
 <main><div class="wrap">
 
 <!-- PRODUCTION -->
-<section class="view on" id="v-prod">
+<section class="view on" id="v-todo">
   <div class="card" id="todoCard">
     <h2>What to do</h2>
-    <p class="hint">Production steps, materials to buy and deliveries to the factory floor — all styles together. Tick an item when it's done.</p>
+    <p class="hint">Everything for all styles: production steps, materials to buy, and materials to bring to the floor. Press <b>Done</b> when finished.</p>
     <div class="td-bar">
       <div class="seg" id="tdPer" role="tablist" aria-label="Period"></div>
       <div class="seg seg-sm" id="tdType" aria-label="Type"></div>
     </div>
     <div id="tdList"></div>
   </div>
+</section>
+
+<!-- PRODUCTION -->
+<section class="view" id="v-prod">
   <div class="card">
-    <h2>Production dashboard</h2>
-    <p class="hint">Updates live from the plan and your ticks. Change any date in the action list, in a style's checklist, or by dragging its bar on the timeline.</p>
+    <h2>Production overview</h2>
+    <p class="hint">Live numbers from the plan and your ticks.</p>
     <div class="kpis" id="pStats"></div>
     <div class="dash2">
       <div class="panel"><h3>Where every style is now</h3><div id="pStage"></div></div>
-      <div class="panel"><h3>Pairs starting production (leather cutting) per week</h3><div id="pLoad"></div></div>
+      <div class="panel"><h3>Pairs starting cutting each week</h3><div id="pLoad"></div></div>
     </div>
-    <div class="panel"><h3>Action list — late steps and steps due in the next 14 days</h3>
-      <div class="tbl" style="background:var(--card)"><table class="act"><thead><tr><th>Done</th><th>Style</th><th>Step</th><th>Date (change if it moves)</th><th>Status</th></tr></thead><tbody id="pAct"></tbody></table></div></div>
+    <div class="panel"><h3>Steps due soon — late and next 14 days</h3>
+      <div class="tbl" style="background:var(--card)"><table class="act"><thead><tr><th>Done</th><th>Style</th><th>Step</th><th>Date</th><th>Status</th></tr></thead><tbody id="pAct"></tbody></table></div></div>
   </div>
   <div class="card">
-    <h2>Production timeline — all styles</h2>
-    <p class="hint">Click a style to open its checklist below. <b>Drag a bar left or right</b> to move that style's whole schedule — materials dates follow.</p>
+    <h2>Timeline</h2>
+    <p class="hint">Tap a style to open its checklist. Drag a bar to move that style's dates.</p>
     <div class="legend">
       <span><i style="background:var(--ph1)"></i>Sampling (fit → PP)</span><span><i style="background:var(--ph2)"></i>Pilot</span>
       <span><i style="background:var(--ph3)"></i>Cutting &amp; closing</span><span><i style="background:var(--ph4)"></i>Lasting &amp; inspection</span>
@@ -326,13 +340,14 @@ nav.tabs button.on{border-bottom-color:var(--orange)}
     <div class="gantt" id="gProd"></div>
   </div>
   <div class="card" id="prodDetailCard">
+    <h2>Style checklist</h2>
     <div class="pickrow"><label for="pSel">Style</label><select id="pSel"></select>
       <button class="btn small" id="pPrev">‹ Prev</button><button class="btn small" id="pNext">Next ›</button></div>
     <div class="detail">
       <div id="pLeft"></div>
       <div>
         <div class="tbl"><table><thead><tr><th>Done</th><th>Step</th><th>Planned date</th><th>Status</th></tr></thead><tbody id="pSteps"></tbody></table></div>
-        <p class="note">Tick a step when it is finished. Change a date if the plan moves — the change is saved and shown in blue. Past steps are ticked automatically from the plan until you change them.</p>
+        <p class="note">Tick a step when it's finished. Change a date if the plan moves (it turns blue). Past steps count as done unless you untick them.</p>
       </div>
     </div>
   </div>
@@ -341,8 +356,8 @@ nav.tabs button.on{border-bottom-color:var(--orange)}
 <!-- PROCUREMENT -->
 <section class="view" id="v-proc">
   <div class="card">
-    <h2>Procurement dashboard</h2>
-    <p class="hint">Counts cover styles not yet in production. Click a tile to open that list below. Change dates in the day-by-day list, a style's material table, or by dragging a ◆ on the timeline.</p>
+    <h2>Materials overview</h2>
+    <p class="hint">For styles not in production yet. Tap a number to see that list.</p>
     <div class="kpis" id="bStats"></div>
     <div class="dash2">
       <div class="panel"><h3>Material lines to buy per week</h3><div id="bWeeks"></div></div>
@@ -350,8 +365,8 @@ nav.tabs button.on{border-bottom-color:var(--orange)}
     </div>
   </div>
   <div class="card" id="dayCard">
-    <h2>Day by day — what to buy and what to deliver to the floor</h2>
-    <p class="hint">All styles together. The same material for different styles is grouped, with the total. Tick when bought or when it reaches the factory floor.</p>
+    <h2>Buy &amp; deliver, day by day</h2>
+    <p class="hint">The same material for different styles is grouped with a total. Tick when bought, or when it's on the floor.</p>
     <div class="pickrow"><label for="dRange">Show</label>
       <select id="dRange"><option value="7">Overdue + next 7 days</option><option value="14" selected>Overdue + next 14 days</option><option value="28">Overdue + next 4 weeks</option><option value="9999">Everything still open</option></select>
       <select id="dWhat"><option value="both">Buy + deliver</option><option value="buy">Buy only</option><option value="del">Deliver only</option></select>
@@ -359,8 +374,8 @@ nav.tabs button.on{border-bottom-color:var(--orange)}
     <div id="dayPlan"></div>
   </div>
   <div class="card">
-    <h2>Procurement timeline — when to buy for each style</h2>
-    <p class="hint"><b>Drag a ◆</b> to move that buy date. Buy on the ◆ date. Materials must be on the factory floor by the start of the green bar. The black line is production start (leather cutting).</p>
+    <h2>Buying timeline</h2>
+    <p class="hint">◆ is the buy date — drag it to move. The green bar means materials are on the floor. The black line is when cutting starts.</p>
     <div class="legend">
       <span><i class="ldia" style="background:var(--pr1)"></i>Buy date — late</span><span><i class="ldia" style="background:var(--pr2)"></i>Buy date — this week</span>
       <span><i class="ldia" style="background:var(--pr3)"></i>Buy date — later</span><span><i style="background:var(--pr3);opacity:.45"></i>Delivery to factory</span>
@@ -369,6 +384,7 @@ nav.tabs button.on{border-bottom-color:var(--orange)}
     <div class="gantt" id="gProc"></div>
   </div>
   <div class="card">
+    <h2>Materials by style</h2>
     <div class="pickrow">
       <label for="bSel">Show</label><select id="bSel"></select>
       <select id="bFilter"><option value="soon">Late + next 14 days</option><option value="open">Everything not yet bought</option><option value="floor">Bought, not yet on floor</option><option value="all">Everything</option></select>
@@ -680,8 +696,8 @@ function inPeriod(x,p){
 function todoRow(x){
   const late=x.d<TODAY, o=x.o;
   const box=x.type==='prod'
-    ? `<input type="checkbox" data-no="${o.no}" data-k="${x.k}" aria-label="Done: ${esc(x.l)}">`
-    : `<input type="checkbox" data-no="${o.no}" data-id="${esc(x.it.id)}" data-f="${x.type==='buy'?'bought':'onfloor'}" aria-label="${x.type==='buy'?'Bought':'On floor'}">`;
+    ? `<label class="td-done"><input type="checkbox" data-no="${o.no}" data-k="${x.k}" aria-label="Done: ${esc(x.l)}"><span>✓ Done</span></label>`
+    : `<label class="td-done"><input type="checkbox" data-no="${o.no}" data-id="${esc(x.it.id)}" data-f="${x.type==='buy'?'bought':'onfloor'}" aria-label="${x.type==='buy'?'Bought':'On floor'}"><span>✓ ${x.type==='buy'?'Bought':'On floor'}</span></label>`;
   const what=x.type==='prod'
     ? `<span class="pill p-blue">Production</span>${esc(x.l)}`
     : x.type==='buy'
@@ -689,7 +705,7 @@ function todoRow(x){
       : `<span class="pill p-green">Deliver</span>${esc(x.it.mat)} to the factory floor${x.it.bought?' <span class="pill p-grey">bought</span>':''}`;
   const qty=x.type==='prod'?o.qty:x.it.qty, unit=x.type==='prod'?'pairs':x.it.unit;
   const sub=`<b>${esc(o.name)}</b> · ${esc(o.color)} · ${num(qty)} ${esc(unit)}${x.type!=='prod'?' · cutting '+fmt(prodDate(o)):''}`;
-  return `<div class="td-row t-${x.type}${late?' late':''}">${box}<div class="td-main"><div class="td-what">${what}</div><div class="td-sub">${sub}</div></div><div class="td-when">${fmtW(x.d)}<small>${rel(x.d)}</small></div></div>`;
+  return `<div class="td-row t-${x.type}${late?' late':''}"><div class="td-main"><div class="td-what">${what}</div><div class="td-sub">${sub}</div></div><div class="td-when">${fmtW(x.d)}<small>${rel(x.d)}</small></div>${box}</div>`;
 }
 function renderTodo(){
   const all=todoTasks(), byType=x=>TD.t==='all'||x.type===TD.t;
@@ -858,6 +874,7 @@ function renderAll(){
 /* ---------- events ---------- */
 function showTab(v){ document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.toggle('on',x.dataset.v===v)); document.querySelectorAll('section.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v)); window.scrollTo({top:0}); }
 document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.v));
+document.getElementById('setToggle').onclick=function(){ const p=document.getElementById('setPanel'); p.hidden=!p.hidden; this.setAttribute('aria-expanded',String(!p.hidden)); };
 document.getElementById('gProd').addEventListener('click',e=>{ if(DRAG.justDragged) return; const r=e.target.closest('.g-row[data-no]'); if(!r) return; selP=r.dataset.no; renderProdGantt(); renderProdDetail(); document.getElementById('prodDetailCard').scrollIntoView({behavior:'smooth',block:'start'}); });
 document.getElementById('gProc').addEventListener('click',e=>{ if(DRAG.justDragged) return; const r=e.target.closest('.g-row[data-no]'); if(!r) return; document.getElementById('bSel').value=r.dataset.no; renderProc(); document.getElementById('bBody').scrollIntoView({behavior:'smooth',block:'center'}); });
 document.getElementById('pSel').onchange=e=>{ selP=e.target.value; renderProdGantt(); renderProdDetail(); };
